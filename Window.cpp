@@ -95,44 +95,44 @@ void Window::messageLoop(MSG msg)
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 
-		if (msg.message == WM_QUIT)
-			quitMessagePosted = true;
-
+		if (msg.message == WM_QUIT) 
+			quitMessagePosted = true; 
+			
 		if (msg.message == WM_LBUTTONDOWN)
 		{
 			D3DUtil::Get().leftPressed = true;
 			m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
 		}
 
-		if (msg.message == WM_LBUTTONUP)
-			D3DUtil::Get().leftPressed = false;
-			
+		if (msg.message == WM_LBUTTONUP) 
+			D3DUtil::Get().leftPressed = false; 
+		
 		if (msg.message == WM_RBUTTONDOWN)
 		{
 			D3DUtil::Get().rightPressed = true;
 			m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
 		}
 			
-		if (msg.message == WM_RBUTTONUP)
-			D3DUtil::Get().rightPressed = false;
-
+		if (msg.message == WM_RBUTTONUP) 
+			D3DUtil::Get().rightPressed = false;	
+		
+			
 		if (D3DUtil::Get().leftPressed)
 		{
-
 			m_LastMouse = m_CurrMouse;
 
 			D3DUtil::Get().m_mousePos = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
 			m_CurrMouse = D3DUtil::Get().m_mousePos;
 			
-			m_Yaw -= static_cast<float>(m_CurrMouse.x - m_LastMouse.x) * m_Sensitivity;
+			m_Yaw -= static_cast<FLOAT>(m_CurrMouse.x - m_LastMouse.x) * m_SpinSensitivity;
 			
-			if ((static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity) > 0.0f &&
-				m_Pitch >= -89.9f + (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity))
-				m_Pitch -= static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity;
+			if ((static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity) > 0.0f &&
+				m_Pitch >= -89.9f + (static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity))
+				m_Pitch -= static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity;
 
-			else if ((static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity) < 0.0f &&
-				m_Pitch <= +87.5f - (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity))
-				m_Pitch -= static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity;
+			else if ((static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity) < 0.0f &&
+				m_Pitch <= +87.5f - (static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity))
+				m_Pitch -= static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity;
 			
 			m_OuterCamera.x = cos_radians(m_Yaw) * cos_radians(m_Pitch);
 			m_OuterCamera.y = sin_radians(m_Pitch);
@@ -146,30 +146,18 @@ void Window::messageLoop(MSG msg)
 		}
 		if (D3DUtil::Get().rightPressed)
 		{
-		
 			m_LastMouse = m_CurrMouse;
 
 			D3DUtil::Get().m_mousePos = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
 			m_CurrMouse = D3DUtil::Get().m_mousePos;
 
-			if (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f < 0.0f &&
-				m_Radius >= 2.0f + static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f)
-				m_Radius += static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f;
+			if (static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity < 0.0f &&
+				m_Radius >= 2.0f + static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity)
+				m_Radius += static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity;
 			
-			else if (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f > 0.0f &&
-				m_Radius <= 20.0f + static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f)
-				m_Radius += static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f;
-
-
-			//m_Yaw -= static_cast<float>(m_CurrMouse.x - m_LastMouse.x) * m_Sensitivity;
-			//
-			//if ((static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity) > 0.0f &&
-			//	m_Pitch >= -89.9f + (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity))
-			//	m_Pitch -= static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity;
-			//
-			//else if ((static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity) < 0.0f &&
-			//	m_Pitch <= +87.5f - (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity))
-			//	m_Pitch -= static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity;
+			else if (static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity > 0.0f &&
+				m_Radius <= 20.0f + static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity)
+				m_Radius += static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity;
 
 			m_OuterCamera.x = cos_radians(m_Yaw) * cos_radians(m_Pitch);
 			m_OuterCamera.y = sin_radians(m_Pitch);
@@ -183,7 +171,4 @@ void Window::messageLoop(MSG msg)
 		}
 	}	
 	
-
-	//OutputDebugString((std::to_string(m_Yaw)).c_str());
-	//OutputDebugString("\n");
 }
