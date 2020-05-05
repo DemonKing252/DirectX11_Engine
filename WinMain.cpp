@@ -22,8 +22,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine
 	{
 		window.createWindow("D3D11 Engine", 100, 100, 800, 600, hInstance, mCmdShow);
 		
-		D3D11App::Get().InitDeviceAndSwapChain(&window);
-		D3D11App::Get().InitRenderTarget(&window);
+		D3D11Engine::Get().InitDeviceAndSwapChain(&window);
+		D3D11Engine::Get().InitRenderTarget(&window);
 
 		MSG msg;
 		ZeroMemory(&msg, sizeof(MSG));
@@ -32,14 +32,14 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine
 		{
 			window.messageLoop(msg);
 
-			D3D11App::Get().ClearRenderTargetView();
+			D3D11Engine::Get().ClearRenderTargetView();
 			
-			D3D11App::Get().Update();
-			D3D11App::Get().Draw();
+			D3D11Engine::Get().Update();
+			D3D11Engine::Get().Draw();
 			
-			D3D11App::Get().PresentSwapChain();
+			D3D11Engine::Get().PresentSwapChain();
 		}
-		D3D11App::Get().Clean();
+		D3D11Engine::Get().Clean();
 	}
 	return 0;
 }

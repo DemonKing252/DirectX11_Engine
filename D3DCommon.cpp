@@ -1,4 +1,6 @@
 #include "D3DCommon.h"
+D3DUtil D3DUtil::instance = D3DUtil();
+
 
 DirectXException::DirectXException(HRESULT hr)
 {

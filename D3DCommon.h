@@ -24,3 +24,24 @@ public:
     std::string HrToString(HRESULT hr)const;
 };
 #define ThrowIfFailed(hr) if (FAILED(hr)) { throw DirectXException(hr); }
+class D3DUtil
+{
+public:
+	DirectX::XMVECTOR m_EyePos = DirectX::XMVectorSet(0.0f, 0.0f, 3.0f, 0.0f);
+	BOOL leftPressed = false;
+	BOOL rightPressed = false;
+	DirectX::XMFLOAT2 m_mousePos = DirectX::XMFLOAT2(0, 0);
+
+	D3DUtil(D3DUtil* other) = delete;
+	D3DUtil() = default;
+
+	static D3DUtil& Get()
+	{
+		return instance;
+	}
+
+
+private:
+	static D3DUtil instance;
+};
+

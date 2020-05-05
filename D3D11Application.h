@@ -40,6 +40,10 @@ private:
 	ID3D11Device* m_d3dDevice;
 	ID3D11DeviceContext* m_d3dDeviceContext;
 	ID3D11RenderTargetView* m_d3dBackBuffer;
+
+	// Keyboard and mouse
+
+
 	
-} D3D11Application, D3D11App;
+} D3D11Application, D3D11App, D3D11Engine;
 

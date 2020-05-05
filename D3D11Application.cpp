@@ -78,6 +78,11 @@ void D3D11Application::ClearRenderTargetView()
 void D3D11Application::Update()
 {
 	gfx.Update(m_d3dDevice, m_d3dDeviceContext);
+
+	//if (m_mouse.Get().GetState().leftButton)
+	{
+	//	exit(0);
+	}
 }
 
 void D3D11Application::Draw()

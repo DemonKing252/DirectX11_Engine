@@ -9,8 +9,17 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_SIZE:
 		// Size call back
 		break;
-
+	case WM_LBUTTONDOWN:
+		//if (wParam & MK_LBUTTON)
+		//Util::leftPressed = true;
+		break;
+	case WM_LBUTTONUP:
+		//Util::leftPressed = false;
+		break;
+	case WM_MOUSEMOVE:
+		break;
 	}
+
 	return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
@@ -44,6 +53,8 @@ Window::~Window()
 void Window::createWindow(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow)
 {
 	windowSize = DirectX::XMFLOAT2(w, h);
+
+
 	m_hwnd = CreateWindowEx(
 		NULL,
 		m_windowClassName,
@@ -52,6 +63,9 @@ void Window::createWindow(const LPCSTR windowTitleName, const INT x, const INT y
 		x, y, w, h,
 		NULL, NULL, hInstance, NULL
 	);
+
+
+
 
 	ShowWindow(m_hwnd, mCmdShow);
 }	
@@ -76,7 +90,7 @@ DirectX::XMFLOAT2 Window::getWindowSize() const
 
 void Window::messageLoop(MSG msg)
 {	
-	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
@@ -84,6 +98,92 @@ void Window::messageLoop(MSG msg)
 		if (msg.message == WM_QUIT)
 			quitMessagePosted = true;
 
-	}
+		if (msg.message == WM_LBUTTONDOWN)
+		{
+			D3DUtil::Get().leftPressed = true;
+			m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
+		}
+
+		if (msg.message == WM_LBUTTONUP)
+			D3DUtil::Get().leftPressed = false;
+			
+		if (msg.message == WM_RBUTTONDOWN)
+		{
+			D3DUtil::Get().rightPressed = true;
+			m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
+		}
+			
+		if (msg.message == WM_RBUTTONUP)
+			D3DUtil::Get().rightPressed = false;
+
+		if (D3DUtil::Get().leftPressed)
+		{
+
+			m_LastMouse = m_CurrMouse;
+
+			D3DUtil::Get().m_mousePos = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
+			m_CurrMouse = D3DUtil::Get().m_mousePos;
+			
+			m_Yaw -= static_cast<float>(m_CurrMouse.x - m_LastMouse.x) * m_Sensitivity;
+			
+			if ((static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity) > 0.0f &&
+				m_Pitch >= -89.9f + (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity))
+				m_Pitch -= static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity;
+
+			else if ((static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity) < 0.0f &&
+				m_Pitch <= +87.5f - (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity))
+				m_Pitch -= static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity;
+			
+			m_OuterCamera.x = cos_radians(m_Yaw) * cos_radians(m_Pitch);
+			m_OuterCamera.y = sin_radians(m_Pitch);
+			m_OuterCamera.z = sin_radians(m_Yaw) * cos_radians(m_Pitch);
+
+			D3DUtil::Get().m_EyePos = DirectX::XMVectorSet(m_Radius * m_OuterCamera.x,
+				m_Radius * m_OuterCamera.y,
+				m_Radius * m_OuterCamera.z,
+				1.0f);
+
+		}
+		if (D3DUtil::Get().rightPressed)
+		{
+		
+			m_LastMouse = m_CurrMouse;
+
+			D3DUtil::Get().m_mousePos = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
+			m_CurrMouse = D3DUtil::Get().m_mousePos;
+
+			if (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f < 0.0f &&
+				m_Radius >= 2.0f + static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f)
+				m_Radius += static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f;
+			
+			else if (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f > 0.0f &&
+				m_Radius <= 20.0f + static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f)
+				m_Radius += static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * 0.1f;
+
+
+			//m_Yaw -= static_cast<float>(m_CurrMouse.x - m_LastMouse.x) * m_Sensitivity;
+			//
+			//if ((static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity) > 0.0f &&
+			//	m_Pitch >= -89.9f + (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity))
+			//	m_Pitch -= static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity;
+			//
+			//else if ((static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity) < 0.0f &&
+			//	m_Pitch <= +87.5f - (static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity))
+			//	m_Pitch -= static_cast<float>(m_CurrMouse.y - m_LastMouse.y) * m_Sensitivity;
+
+			m_OuterCamera.x = cos_radians(m_Yaw) * cos_radians(m_Pitch);
+			m_OuterCamera.y = sin_radians(m_Pitch);
+			m_OuterCamera.z = sin_radians(m_Yaw) * cos_radians(m_Pitch);
+
+			D3DUtil::Get().m_EyePos = DirectX::XMVectorSet(m_Radius * m_OuterCamera.x,
+				m_Radius * m_OuterCamera.y,
+				m_Radius * m_OuterCamera.z,
+				1.0f);
+
+		}
+	}	
 	
+
+	//OutputDebugString((std::to_string(m_Yaw)).c_str());
+	//OutputDebugString("\n");
 }

@@ -211,20 +211,25 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	c_vs_Buffer.World = DirectX::XMMatrixIdentity();
 
 	// eye position in world space
-	DirectX::XMVECTOR EyePosition = DirectX::XMVectorSet(0.0f, 1.0f, -3.0f, 0.0f);
+	//DirectX::XMVECTOR EyePosition = DirectX::XMVectorSet(0.0f, 1.0f, -3.0f, 0.0f);
 	
 	// focus position in world space (where the camera is looking at)
-	DirectX::XMVECTOR EyeFocus = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 0.0f);
+	DirectX::XMVECTOR EyeFocus = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
 
 	// up vector (represents the orientation of the camera). 
 	// [ 0, -1, 0 ] to make the camera look upside down
 	DirectX::XMVECTOR Up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	// view matrix (left handed coordinate system)
-	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(EyePosition, EyeFocus, Up);
+	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(D3DUtil::Get().m_EyePos,
+													   EyeFocus, 
+													   Up);
 	
 	// projection matrix (45 degrees left/right, with an aspect ration of 1 1/3 (screenWidth / screenHeight)
-	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), 800.0f/600.0f, 0.1f, 300.0f);
+	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
+																	 800.0f/600.0f, // Screen aspect
+																	 0.1f,			// Minimum vocal distance
+																	 300.0f);		// Maximum vocal distance
 
 	// what axis should our object rotate on?
 	DirectX::XMVECTOR rotAxis = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
@@ -280,7 +285,7 @@ void Graphics::Draw(ID3D11DeviceContext* deviceContext)
 	UINT offset = 0;
 	UINT stride = sizeof(Vertex);
 
-	// bind vertex/index buffers, set our primitive type
+	// bind vertex/index buffers, and set our primitive type
 	deviceContext->IASetVertexBuffers(0, 1, &m_d3dVertexBuffer, &stride, &offset);
 	deviceContext->IASetIndexBuffer(m_d3dIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
