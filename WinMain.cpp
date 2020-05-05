@@ -11,7 +11,6 @@ Lines of code: 611
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int mCmdShow)
 {
 	// D3D11 Engine 
-
 	Window window("HWNDClass", hInstance);
 
 	if (!window.registerClass())
@@ -42,6 +41,5 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine
 		}
 		D3D11App::Get().Clean();
 	}
-
 	return 0;
 }

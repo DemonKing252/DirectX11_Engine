@@ -1,3 +1,8 @@
+cbuffer PSConstantBuffer : register(b0)
+{
+	float3 color;
+}
+
 struct PSLayout
 {
 	float4 position : SV_POSITION;
@@ -10,5 +15,5 @@ float4 PSMain(PSLayout layout) : SV_TARGET
 {
 	float4 g_sampleColor = g_texture.Sample(g_samplerState, layout.texCoord);
 
-	return g_sampleColor;
+	return g_sampleColor * float4(color, 1.0f);
 }

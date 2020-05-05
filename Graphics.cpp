@@ -3,7 +3,8 @@
 Graphics::Graphics()
 {
 	// Zero out all out our buffers and layouts
-	ZeroMemory(&m_d3dConstantBuffer, sizeof(D3D11_BUFFER_DESC));
+	ZeroMemory(&m_d3dVSConstantBuffer, sizeof(D3D11_BUFFER_DESC));
+	ZeroMemory(&m_d3dPSConstantBuffer, sizeof(D3D11_BUFFER_DESC));
 	ZeroMemory(&m_d3dVertexBuffer, sizeof(D3D11_BUFFER_DESC));
 	ZeroMemory(&m_d3dIndexBuffer, sizeof(D3D11_BUFFER_DESC));
 	ZeroMemory(&m_d3dVertexShader, sizeof(ID3D11VertexShader));
@@ -71,21 +72,16 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	ThrowIfFailed(device->CreateInputLayout(inputLayout, ARRAYSIZE(inputLayout), vs->GetBufferPointer(), vs->GetBufferSize(), &m_d3dInputLayout));
 	deviceContext->IASetInputLayout(m_d3dInputLayout);
 
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile
-	(
-		device,
-		L"Textures/StoneBrick.jpg",
-		nullptr,
-		&brick_shaderResource
-	));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, &brick_shaderResource));
 
+	// what is a texture filter?
+	// read:
+	// https://gaming.stackexchange.com/questions/48912/whats-the-difference-between-bilinear-trilinear-and-anisotropic-texture-filte
+	
 	// sampler description
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
 
-	// what is a texture filter?
-	// read:
-	//	https://gaming.stackexchange.com/questions/48912/whats-the-difference-between-bilinear-trilinear-and-anisotropic-texture-filte
 	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -94,10 +90,7 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	ThrowIfFailed(device->CreateSamplerState(&samplerDesc, &m_d3dSamplerState));
-	deviceContext->PSSetSamplers(0, 1, &m_d3dSamplerState);
-	
-	deviceContext->PSSetShaderResources(0, 1, &brick_shaderResource);
-	
+
 }
 
 void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -201,13 +194,21 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
-	if (m_d3dConstantBuffer != nullptr)
-		m_d3dConstantBuffer->Release();
+	if (m_d3dVSConstantBuffer != nullptr)
+		m_d3dVSConstantBuffer->Release();
+
+	if (m_d3dPSConstantBuffer != nullptr)
+		m_d3dPSConstantBuffer->Release();
+
 
 	// why is this so low? I've been too lazy to add a feature to control the framerate
 	zaxis_angle += 0.00125f;
+	c_ps_Buffer.color.x = 1.0f - (0.5f * (cos(zaxis_angle)) + 0.5f);
+	c_ps_Buffer.color.y = (0.5f * (cos(zaxis_angle)) + 0.5f);
+	
+	//OutputDebugString((LPCSTR)std::to_string(c_ps_Buffer.color.x));
 
-	cBuffer.World = DirectX::XMMatrixIdentity();
+	c_vs_Buffer.World = DirectX::XMMatrixIdentity();
 
 	// eye position in world space
 	DirectX::XMVECTOR EyePosition = DirectX::XMVectorSet(0.0f, 1.0f, -3.0f, 0.0f);
@@ -236,28 +237,42 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 		DirectX::XMMatrixTranslation(0.0f, 0.0f, 0.0f);			// Translate
 	
 	// multiply our 3 matricies to get the world matrix
-	cBuffer.World = Model * view * projection;
+	c_vs_Buffer.World = Model * view * projection;
 
 	// transpose (our D3D11 vertex shader expects to have COLUMN majors!!!)
-	cBuffer.World = DirectX::XMMatrixTranspose(cBuffer.World);
+	c_vs_Buffer.World = DirectX::XMMatrixTranspose(c_vs_Buffer.World);
 
-	// Update constant buffer
-	D3D11_BUFFER_DESC cBufferDesc;
-	ZeroMemory(&cBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	// Update constant buffer in the vertex shader
+	// -----------------------------------------------------------------
+	D3D11_BUFFER_DESC c_vs_BufferDesc;
+	ZeroMemory(&c_vs_BufferDesc, sizeof(D3D11_BUFFER_DESC));
 
-	cBufferDesc.ByteWidth = sizeof(D3D11_CONSTANT_BUFFER);
-	cBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	cBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	cBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	c_vs_BufferDesc.ByteWidth = sizeof(D3D11_VS_CONSTANT_BUFFER);
+	c_vs_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	c_vs_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	c_vs_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	D3D11_SUBRESOURCE_DATA cSubResource;
 	ZeroMemory(&cSubResource, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	cSubResource.pSysMem = &cBuffer;
+	cSubResource.pSysMem = &c_vs_Buffer;
 
-	ThrowIfFailed(device->CreateBuffer(&cBufferDesc, &cSubResource, &m_d3dConstantBuffer));
-	deviceContext->VSSetConstantBuffers(0, 1, &m_d3dConstantBuffer);
+	ThrowIfFailed(device->CreateBuffer(&c_vs_BufferDesc, &cSubResource, &m_d3dVSConstantBuffer));
+	deviceContext->VSSetConstantBuffers(0, 1, &m_d3dVSConstantBuffer);
+	// -----------------------------------------------------------------
 
+
+	// Update constant buffer in the pixel shader
+	// -----------------------------------------------------------------
+
+	D3D11_SUBRESOURCE_DATA c_ps_SubResource;
+	ZeroMemory(&cSubResource, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	cSubResource.pSysMem = &c_ps_Buffer;
+
+	ThrowIfFailed(device->CreateBuffer(&c_vs_BufferDesc, &cSubResource, &m_d3dPSConstantBuffer));
+	deviceContext->PSSetConstantBuffers(0, 1, &m_d3dPSConstantBuffer);
+	// -----------------------------------------------------------------
 }
 
 void Graphics::Draw(ID3D11DeviceContext* deviceContext)
@@ -265,10 +280,16 @@ void Graphics::Draw(ID3D11DeviceContext* deviceContext)
 	UINT offset = 0;
 	UINT stride = sizeof(Vertex);
 
+	// bind vertex/index buffers, set our primitive type
 	deviceContext->IASetVertexBuffers(0, 1, &m_d3dVertexBuffer, &stride, &offset);
 	deviceContext->IASetIndexBuffer(m_d3dIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+	// set our texture sampler state and texture itself to be active on the pipeline
+	deviceContext->PSSetSamplers(0, 1, &m_d3dSamplerState);
+	deviceContext->PSSetShaderResources(0, 1, &brick_shaderResource);
+
+	// draw call
 	deviceContext->DrawIndexed(36, 0, 0);
 }
 
@@ -279,5 +300,6 @@ void Graphics::Clean()
 	m_d3dInputLayout->Release();
 	m_d3dVertexShader->Release();
 	m_d3dPixelShader->Release();
-	m_d3dConstantBuffer->Release();
+	m_d3dVSConstantBuffer->Release();
+	m_d3dPSConstantBuffer->Release();
 }

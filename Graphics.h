@@ -31,12 +31,14 @@ private:
 	// buffers
 	ID3D11Buffer* m_d3dVertexBuffer;
 	ID3D11Buffer* m_d3dIndexBuffer;
-	ID3D11Buffer* m_d3dConstantBuffer;
-	
+	ID3D11Buffer* m_d3dVSConstantBuffer;
+	ID3D11Buffer* m_d3dPSConstantBuffer;
+
 	// input layout and constant buffer instance
 	ID3D11InputLayout* m_d3dInputLayout;
-	D3D11_CONSTANT_BUFFER cBuffer;
 
+	D3D11_VS_CONSTANT_BUFFER c_vs_Buffer;
+	D3D11_PS_CONSTANT_BUFFER c_ps_Buffer;
 	// texturing
 	ID3D11ShaderResourceView* brick_shaderResource;
 	ID3D11SamplerState* m_d3dSamplerState;

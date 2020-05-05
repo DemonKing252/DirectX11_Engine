@@ -1,3 +1,6 @@
 ﻿  Graphics.cpp
-c:\users\owner\source\repos\directx11_engine\directx11_engine\graphics.cpp(171): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\graphics.cpp(166): warning C4267: '=': conversion from 'size_t' to 'UINT', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\graphics.cpp(268): warning C4101: 'c_ps_SubResource': unreferenced local variable
+  WinMain.cpp
+  Generating Code...
   DirectX11_Engine.vcxproj -> C:\Users\Owner\source\repos\DirectX11_Engine\x64\Debug\DirectX11_Engine.exe
