@@ -29,14 +29,14 @@ public:
 	DirectX::XMFLOAT2 m_LastMouse;
 	DirectX::XMFLOAT2 m_CurrMouse;
 
-	BOOL quitMessagePosted;
+	BOOL m_bQuitMessagePosted;
 
-	void createWindow(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow);
-	BOOL registerClass();
-	HWND getWindow()const;
+	void CreateWin32Window(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow);
+	BOOL RegisterWinClass();
+	HWND GetWindow()const;
 	DirectX::XMFLOAT2 getWindowSize() const;
 
-	void messageLoop(MSG msg);
+	void MessageLoop(MSG msg);
 
 	Window(Window* other) = delete;
 	Window(const LPCSTR className, const HINSTANCE hInstance);

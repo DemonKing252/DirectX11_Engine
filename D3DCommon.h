@@ -15,7 +15,7 @@ struct D3D11_VS_CONSTANT_BUFFER
 };
 struct D3D11_PS_CONSTANT_BUFFER
 {
-	DirectX::XMFLOAT3 color = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	DirectX::XMFLOAT4 color = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 };
 class DirectXException
 {

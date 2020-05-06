@@ -12,7 +12,7 @@ void D3D11Application::InitDeviceAndSwapChain(const Window* window)
 	swapChainDesc.BufferDesc.Width  = window->getWindowSize().x;
 	swapChainDesc.BufferDesc.Height = window->getWindowSize().y;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.OutputWindow = window->getWindow();
+	swapChainDesc.OutputWindow = window->GetWindow();
 	swapChainDesc.SampleDesc.Count = 4;
 	swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.Windowed = TRUE;
@@ -79,10 +79,6 @@ void D3D11Application::Update()
 {
 	gfx.Update(m_d3dDevice, m_d3dDeviceContext);
 
-	//if (m_mouse.Get().GetState().leftButton)
-	{
-	//	exit(0);
-	}
 }
 
 void D3D11Application::Draw()

@@ -26,7 +26,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 Window::Window(const LPCSTR className, const HINSTANCE hInstance)
 {
-	quitMessagePosted = false;
+	m_bQuitMessagePosted = false;
 
 	// Step1: create a window class
 	ZeroMemory(&m_windowClass, sizeof(WNDCLASS));
@@ -50,7 +50,7 @@ Window::Window(const LPCSTR className, const HINSTANCE hInstance)
 Window::~Window()
 {
 }
-void Window::createWindow(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow)
+void Window::CreateWin32Window(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow)
 {
 	windowSize = DirectX::XMFLOAT2(w, h);
 
@@ -70,7 +70,7 @@ void Window::createWindow(const LPCSTR windowTitleName, const INT x, const INT y
 	ShowWindow(m_hwnd, mCmdShow);
 }	
 
-BOOL Window::registerClass()
+BOOL Window::RegisterWinClass()
 {
 	if (!SUCCEEDED(RegisterClass(&m_windowClass)))
 		return FALSE;
@@ -78,7 +78,7 @@ BOOL Window::registerClass()
 	return TRUE;
 }
 
-HWND Window::getWindow() const
+HWND Window::GetWindow() const
 {
 	return m_hwnd;
 }
@@ -88,7 +88,7 @@ DirectX::XMFLOAT2 Window::getWindowSize() const
 	return windowSize;
 }
 
-void Window::messageLoop(MSG msg)
+void Window::MessageLoop(MSG msg)
 {	
 	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 	{
@@ -96,7 +96,7 @@ void Window::messageLoop(MSG msg)
 		DispatchMessage(&msg);
 
 		if (msg.message == WM_QUIT) 
-			quitMessagePosted = true; 
+			m_bQuitMessagePosted = true; 
 			
 		if (msg.message == WM_LBUTTONDOWN)
 		{

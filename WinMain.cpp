@@ -13,14 +13,14 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine
 	// D3D11 Engine 
 	Window window("HWNDClass", hInstance);
 
-	if (!window.registerClass())
+	if (!window.RegisterWinClass())
 	{
 		MessageBox(0, "Window Register Failed!", "HR ERROR", 0);
 		return -1;
 	}
 	else
 	{
-		window.createWindow("D3D11 Engine", 100, 100, 800, 600, hInstance, mCmdShow);
+		window.CreateWin32Window("D3D11 Engine", 100, 100, 800, 600, hInstance, mCmdShow);
 		
 		D3D11Engine::Get().InitDeviceAndSwapChain(&window);
 		D3D11Engine::Get().InitRenderTarget(&window);
@@ -28,9 +28,9 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine
 		MSG msg;
 		ZeroMemory(&msg, sizeof(MSG));
 
-		while (!window.quitMessagePosted)
+		while (!window.m_bQuitMessagePosted)
 		{
-			window.messageLoop(msg);
+			window.MessageLoop(msg);
 
 			D3D11Engine::Get().ClearRenderTargetView();
 			

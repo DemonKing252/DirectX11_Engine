@@ -175,7 +175,6 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	ThrowIfFailed(device->CreateBuffer(&vBufferDesc, &vSubResource, &m_d3dVertexBuffer));
 
 	// index buffer
-
 	D3D11_BUFFER_DESC iBufferDesc;
 	ZeroMemory(&iBufferDesc, sizeof(D3D11_BUFFER_DESC));
 
@@ -200,11 +199,10 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	if (m_d3dPSConstantBuffer != nullptr)
 		m_d3dPSConstantBuffer->Release();
 
-
 	// why is this so low? I've been too lazy to add a feature to control the framerate
 	zaxis_angle += 0.00125f;
-	c_ps_Buffer.color.x = 1.0f - (0.5f * (cos(zaxis_angle)) + 0.5f);
-	c_ps_Buffer.color.y = (0.5f * (cos(zaxis_angle)) + 0.5f);
+	c_ps_Buffer.color.x = 1.0f - (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
+	c_ps_Buffer.color.y =        (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
 	
 	//OutputDebugString((LPCSTR)std::to_string(c_ps_Buffer.color.x));
 
@@ -221,12 +219,12 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	DirectX::XMVECTOR Up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
 	// view matrix (left handed coordinate system)
-	DirectX::XMMATRIX view = DirectX::XMMatrixLookAtLH(D3DUtil::Get().m_EyePos,
+	DirectX::XMMATRIX View = DirectX::XMMatrixLookAtLH(D3DUtil::Get().m_EyePos,
 													   EyeFocus, 
 													   Up);
 	
 	// projection matrix (45 degrees left/right, with an aspect ration of 1 1/3 (screenWidth / screenHeight)
-	DirectX::XMMATRIX projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
+	DirectX::XMMATRIX Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
 																	 800.0f/600.0f, // Screen aspect
 																	 0.1f,			// Minimum vocal distance
 																	 300.0f);		// Maximum vocal distance
@@ -242,7 +240,7 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 		DirectX::XMMatrixTranslation(0.0f, 0.0f, 0.0f);			// Translate
 	
 	// multiply our 3 matricies to get the world matrix
-	c_vs_Buffer.World = Model * view * projection;
+	c_vs_Buffer.World = Model * View * Projection;
 
 	// transpose (our D3D11 vertex shader expects to have COLUMN majors!!!)
 	c_vs_Buffer.World = DirectX::XMMatrixTranspose(c_vs_Buffer.World);
@@ -269,13 +267,20 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	// Update constant buffer in the pixel shader
 	// -----------------------------------------------------------------
+	D3D11_BUFFER_DESC c_ps_BufferDesc;
+	ZeroMemory(&c_ps_BufferDesc, sizeof(D3D11_BUFFER_DESC));
+
+	c_ps_BufferDesc.ByteWidth = sizeof(D3D11_PS_CONSTANT_BUFFER);
+	c_ps_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	c_ps_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	c_ps_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
 	D3D11_SUBRESOURCE_DATA c_ps_SubResource;
-	ZeroMemory(&cSubResource, sizeof(D3D11_SUBRESOURCE_DATA));
+	ZeroMemory(&c_ps_SubResource, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	cSubResource.pSysMem = &c_ps_Buffer;
+	c_ps_SubResource.pSysMem = &c_ps_Buffer;
 
-	ThrowIfFailed(device->CreateBuffer(&c_vs_BufferDesc, &cSubResource, &m_d3dPSConstantBuffer));
+	ThrowIfFailed(device->CreateBuffer(&c_ps_BufferDesc, &c_ps_SubResource, &m_d3dPSConstantBuffer));
 	deviceContext->PSSetConstantBuffers(0, 1, &m_d3dPSConstantBuffer);
 	// -----------------------------------------------------------------
 }
@@ -284,7 +289,7 @@ void Graphics::Draw(ID3D11DeviceContext* deviceContext)
 {
 	UINT offset = 0;
 	UINT stride = sizeof(Vertex);
-
+	
 	// bind vertex/index buffers, and set our primitive type
 	deviceContext->IASetVertexBuffers(0, 1, &m_d3dVertexBuffer, &stride, &offset);
 	deviceContext->IASetIndexBuffer(m_d3dIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
