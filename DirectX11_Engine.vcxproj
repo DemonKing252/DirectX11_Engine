@@ -19,16 +19,20 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="D3DCommon.cpp" />
     <ClCompile Include="D3D11Application.cpp" />
     <ClCompile Include="Graphics.cpp" />
+    <ClCompile Include="MathUtil.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="D3DCommon.h" />
     <ClInclude Include="D3D11Application.h" />
     <ClInclude Include="Graphics.h" />
+    <ClInclude Include="MathUtil.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>

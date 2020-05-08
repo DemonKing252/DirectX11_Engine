@@ -1,5 +1,6 @@
 ﻿#include "Graphics.h"
-
+#include "Camera.h"
+#include "Window.h"
 Graphics::Graphics()
 {
 	// Zero out all out our buffers and layouts
@@ -17,13 +18,6 @@ Graphics::Graphics()
 Graphics::~Graphics()
 {
 
-}
-DirectX::XMMATRIX InverseTranspose(DirectX::CXMMATRIX M)
-{// B = (A−1)T (the inverse transpose of A) 
-	DirectX::XMMATRIX A = M;
-	A.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-	DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(A);
-	return DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, A));
 }
 
 void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -68,15 +62,15 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	D3D11_INPUT_ELEMENT_DESC inputLayout[] =
 	{
 		// layout 1 -> 3D vector representing vertex positions
-		// 12 bytes in V-RAM
+		// 12 bytes in V-RAM --> [12 bytes in vertex]
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		
 		// layout 2 -> 2D vector representing vertex texture coordinates
-		// 8 bytes in V-RAM
+		// 8 bytes in V-RAM --> [20 bytes in vertex]
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 
 		// layout 3 -> 3D vector representing vertex texture normals
-		// 8 bytes in V-RAM
+		// 12 bytes in V-RAM --> [32 bytes in vertex]
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
@@ -101,7 +95,6 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
 	ThrowIfFailed(device->CreateSamplerState(&samplerDesc, &m_d3dSamplerState));
-
 }
 
 void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -257,9 +250,9 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	// Actual World Matrix = Transpose(Inverse(MVP))
 
-	c_vs_Buffer.Model = DirectX::XMMatrixTranspose(InverseTranspose(Model));
-	c_vs_Buffer.View =  DirectX::XMMatrixTranspose(InverseTranspose(View));
-	c_vs_Buffer.Proj =  DirectX::XMMatrixTranspose(InverseTranspose(Projection));
+	c_vs_Buffer.Model = DirectX::XMMatrixTranspose(MathUtil::InverseTranspose(Model));
+	c_vs_Buffer.View =  DirectX::XMMatrixTranspose(MathUtil::InverseTranspose(View));
+	c_vs_Buffer.Proj =  DirectX::XMMatrixTranspose(MathUtil::InverseTranspose(Projection));
 	
 	// transpose (our D3D11 vertex shader expects to have COLUMN majors!!!)
 	//c_vs_Buffer.World = DirectX::XMMatrixTranspose(c_vs_Buffer.World);
@@ -321,6 +314,7 @@ void Graphics::Draw(ID3D11DeviceContext* deviceContext)
 	// draw call
 	deviceContext->DrawIndexed(36, 0, 0);
 }
+
 
 void Graphics::Clean()
 {

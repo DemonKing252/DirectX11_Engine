@@ -13,7 +13,7 @@ public:
 
 	// Initalizing D3D
 	void InitDeviceAndSwapChain(const Window* window);
-	void InitRenderTarget(const Window* window);
+	void InitRenderTarget(Window* window);
 	
 	// Game loop
 	void ClearRenderTargetView();

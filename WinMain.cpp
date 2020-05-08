@@ -1,5 +1,6 @@
 #include "Window.h"
 #include "D3D11Application.h"
+#include "Camera.h"
 /*********************************************************************************
 DirectX11_Engine::WinMain.cpp by Liam Blake (C) 2020 All Rights Reserved.
 
@@ -11,7 +12,9 @@ Lines of code: 611
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int mCmdShow)
 {
 	// D3D11 Engine 
-	Window window("HWNDClass", hInstance);
+	Camera camera;
+	Window window("HWNDClass", hInstance, camera);
+
 
 	if (!window.RegisterWinClass())
 	{

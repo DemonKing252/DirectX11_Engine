@@ -96,12 +96,13 @@ float4 PSMain(PSLayout layout) : SV_TARGET
 
 	// light information
 	g_pointLight.Position = float3(-2.0f, 0.0f, 0.0f);
-	g_pointLight.Color = float3(1.5f, 1.5f, 1.5f);
+	g_pointLight.Color = float3(1.5f, 1.5f, 0.0f);
 	g_pointLight.Strength = 1.0f;
 	g_pointLight.FallOffStart = 0.1f;
 	g_pointLight.FallOffEnd = 15.0f;
 
 	float3 totalLight = float3(0, 0, 0);
+	float3 specular = float3(0, 0, 0), diff = float3(0, 0, 0), diffuse = float3(0, 0, 0);
 
 	float4 g_sampleColor = g_texture.Sample(g_samplerState, layout.texCoord);
 
@@ -111,10 +112,17 @@ float4 PSMain(PSLayout layout) : SV_TARGET
 	// Calculate Diffuse:
 	float3 norm = normalize(layout.normal);
 	float3 lightDir = normalize(g_pointLight.Position - layout.fragPos);
-	float diff = max(dot(norm, lightDir), 0.0f);
+	diff = max(dot(norm, lightDir), 0.0f);
+	diffuse += (diff * g_pointLight.Color * g_pointLight.Strength) * ((g_pointLight.FallOffEnd - distance) / (g_pointLight.FallOffEnd - g_pointLight.FallOffStart));
 
+	// Calculate Specular:
+	float3 viewDir = normalize(EyeWorldSpace.xyz - layout.fragPos);
+	float3 reflectDir = reflect(-lightDir, norm);
+	float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32) / (distance * distance);
+	specular += g_pointLight.Strength * spec * g_pointLight.Color;
 
-	totalLight = ambientLight + (diff * g_pointLight.Color * g_pointLight.Strength) * ((g_pointLight.FallOffEnd - distance) / (g_pointLight.FallOffEnd - g_pointLight.FallOffStart));
+	totalLight = (ambientLight + diffuse + specular);
+	
 	//totalLight = ambientLight + ComputePointLight(g_pointLight, layout.fragPos, norm, float3(0.0f, 0.0f, 3.0f));
 
 	// Sampler state (texture) multiplied by the total light that we calculated

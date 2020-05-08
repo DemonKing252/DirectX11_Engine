@@ -1,4 +1,6 @@
 #include "Window.h"
+#include "Camera.h"
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
@@ -24,10 +26,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-Window::Window(const LPCSTR className, const HINSTANCE hInstance)
+Window::Window(const LPCSTR className, const HINSTANCE hInstance, Camera& camera)
 {
 	m_bQuitMessagePosted = false;
 
+	this->m_pCamera = &camera;
 	// Step1: create a window class
 	ZeroMemory(&m_windowClass, sizeof(WNDCLASS));
 
@@ -43,7 +46,18 @@ Window::Window(const LPCSTR className, const HINSTANCE hInstance)
 	m_windowClass.lpszMenuName = nullptr;			// No menu
 	m_windowClass.lpszClassName = className;
 
-	// Step 2: create a window using the associated class
+	m_pCamera->m_vEyePosition.x = MathUtil::cos_radians(m_pCamera->m_Yaw) * MathUtil::cos_radians(m_pCamera->m_Pitch);
+	m_pCamera->m_vEyePosition.y = MathUtil::sin_radians(m_pCamera->m_Pitch);
+	m_pCamera->m_vEyePosition.z = MathUtil::sin_radians(m_pCamera->m_Yaw) * MathUtil::cos_radians(m_pCamera->m_Pitch);
+
+	D3DUtil::Get().m_EyePos = DirectX::XMVectorSet
+	(
+		m_pCamera->m_Radius * m_pCamera->m_vEyePosition.x,
+		m_pCamera->m_Radius * m_pCamera->m_vEyePosition.y,
+		m_pCamera->m_Radius * m_pCamera->m_vEyePosition.z,
+		1.0f
+	);
+	
 }
 
 
@@ -54,7 +68,6 @@ void Window::CreateWin32Window(const LPCSTR windowTitleName, const INT x, const 
 {
 	windowSize = DirectX::XMFLOAT2(w, h);
 
-
 	m_hwnd = CreateWindowEx(
 		NULL,
 		m_windowClassName,
@@ -63,9 +76,6 @@ void Window::CreateWin32Window(const LPCSTR windowTitleName, const INT x, const 
 		x, y, w, h,
 		NULL, NULL, hInstance, NULL
 	);
-
-
-
 
 	ShowWindow(m_hwnd, mCmdShow);
 }	
@@ -88,6 +98,12 @@ DirectX::XMFLOAT2 Window::getWindowSize() const
 	return windowSize;
 }
 
+Camera * Window::GetCamera()
+{
+	return m_pCamera;
+	// TODO: insert return statement here
+}
+
 void Window::MessageLoop(MSG msg)
 {	
 	while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -101,7 +117,7 @@ void Window::MessageLoop(MSG msg)
 		if (msg.message == WM_LBUTTONDOWN)
 		{
 			D3DUtil::Get().leftPressed = true;
-			m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
+			m_pCamera->m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
 		}
 
 		if (msg.message == WM_LBUTTONUP) 
@@ -110,7 +126,7 @@ void Window::MessageLoop(MSG msg)
 		if (msg.message == WM_RBUTTONDOWN)
 		{
 			D3DUtil::Get().rightPressed = true;
-			m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
+			m_pCamera->m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
 		}
 			
 		if (msg.message == WM_RBUTTONUP) 
@@ -119,53 +135,56 @@ void Window::MessageLoop(MSG msg)
 			
 		if (D3DUtil::Get().leftPressed)
 		{
-			m_LastMouse = m_CurrMouse;
+			m_pCamera->m_LastMouse = m_pCamera->m_CurrMouse;
 
 			D3DUtil::Get().m_mousePos = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
-			m_CurrMouse = D3DUtil::Get().m_mousePos;
+			m_pCamera->m_CurrMouse = D3DUtil::Get().m_mousePos;
 			
-			m_Yaw -= static_cast<FLOAT>(m_CurrMouse.x - m_LastMouse.x) * m_SpinSensitivity;
+			m_pCamera->m_Yaw -= static_cast<FLOAT>(m_pCamera->m_CurrMouse.x - m_pCamera->m_LastMouse.x) * m_pCamera->m_SpinSensitivity;
 			
-			if ((static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity) > 0.0f &&
-				m_Pitch >= -89.9f + (static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity))
-				m_Pitch -= static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity;
+			if ((static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_SpinSensitivity) > 0.0f &&
+				m_pCamera->m_Pitch >= -89.9f + (static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_SpinSensitivity))
+				m_pCamera->m_Pitch -= static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_SpinSensitivity;
 
-			else if ((static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity) < 0.0f &&
-				m_Pitch <= +87.5f - (static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity))
-				m_Pitch -= static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_SpinSensitivity;
+			else if ((static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_SpinSensitivity) < 0.0f &&
+				m_pCamera->m_Pitch <= +87.5f - (static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_SpinSensitivity))
+				m_pCamera->m_Pitch -= static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_SpinSensitivity;
 			
-			m_OuterCamera.x = cos_radians(m_Yaw) * cos_radians(m_Pitch);
-			m_OuterCamera.y = sin_radians(m_Pitch);
-			m_OuterCamera.z = sin_radians(m_Yaw) * cos_radians(m_Pitch);
+			m_pCamera->m_vEyePosition.x = MathUtil::cos_radians(m_pCamera->m_Yaw) * MathUtil::cos_radians(m_pCamera->m_Pitch);
+			m_pCamera->m_vEyePosition.y = MathUtil::sin_radians(m_pCamera->m_Pitch);
+			m_pCamera->m_vEyePosition.z = MathUtil::sin_radians(m_pCamera->m_Yaw) * MathUtil::cos_radians(m_pCamera->m_Pitch);
 
-			D3DUtil::Get().m_EyePos = DirectX::XMVectorSet(m_Radius * m_OuterCamera.x,
-				m_Radius * m_OuterCamera.y,
-				m_Radius * m_OuterCamera.z,
-				1.0f);
+			D3DUtil::Get().m_EyePos = DirectX::XMVectorSet
+			(
+				m_pCamera->m_Radius * m_pCamera->m_vEyePosition.x,
+				m_pCamera->m_Radius * m_pCamera->m_vEyePosition.y,
+				m_pCamera->m_Radius * m_pCamera->m_vEyePosition.z,
+				1.0f
+			);
 
 		}
 		if (D3DUtil::Get().rightPressed)
 		{
-			m_LastMouse = m_CurrMouse;
+			m_pCamera->m_LastMouse = m_pCamera->m_CurrMouse;
 
 			D3DUtil::Get().m_mousePos = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
-			m_CurrMouse = D3DUtil::Get().m_mousePos;
+			m_pCamera->m_CurrMouse = D3DUtil::Get().m_mousePos;
 
-			if (static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity < 0.0f &&
-				m_Radius >= 2.0f + static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity)
-				m_Radius += static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity;
+			if (static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_ZoomSensitivity < 0.0f &&
+				m_pCamera->m_Radius >= 2.0f + static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_ZoomSensitivity)
+				m_pCamera->m_Radius += static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_ZoomSensitivity;
 			
-			else if (static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity > 0.0f &&
-				m_Radius <= 20.0f + static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity)
-				m_Radius += static_cast<FLOAT>(m_CurrMouse.y - m_LastMouse.y) * m_ZoomSensitivity;
+			else if (static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_ZoomSensitivity > 0.0f &&
+				m_pCamera->m_Radius <= 20.0f + static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_ZoomSensitivity)
+				m_pCamera->m_Radius += static_cast<FLOAT>(m_pCamera->m_CurrMouse.y - m_pCamera->m_LastMouse.y) * m_pCamera->m_ZoomSensitivity;
 
-			m_OuterCamera.x = cos_radians(m_Yaw) * cos_radians(m_Pitch);
-			m_OuterCamera.y = sin_radians(m_Pitch);
-			m_OuterCamera.z = sin_radians(m_Yaw) * cos_radians(m_Pitch);
+			m_pCamera->m_vEyePosition.x = MathUtil::cos_radians(m_pCamera->m_Yaw) * MathUtil::cos_radians(m_pCamera->m_Pitch);
+			m_pCamera->m_vEyePosition.y = MathUtil::sin_radians(m_pCamera->m_Pitch);
+			m_pCamera->m_vEyePosition.z = MathUtil::sin_radians(m_pCamera->m_Yaw) * MathUtil::cos_radians(m_pCamera->m_Pitch);
 
-			D3DUtil::Get().m_EyePos = DirectX::XMVectorSet(m_Radius * m_OuterCamera.x,
-				m_Radius * m_OuterCamera.y,
-				m_Radius * m_OuterCamera.z,
+			D3DUtil::Get().m_EyePos = DirectX::XMVectorSet(m_pCamera->m_Radius * m_pCamera->m_vEyePosition.x,
+				m_pCamera->m_Radius * m_pCamera->m_vEyePosition.y,
+				m_pCamera->m_Radius * m_pCamera->m_vEyePosition.z,
 				1.0f);
 
 		}
