@@ -17,6 +17,7 @@ public:
 	
 	// Game loop
 	void ClearRenderTargetView();
+	void ClearDepthAndStencil();
 	void Update();
 	void Draw();
 	void PresentSwapChain();

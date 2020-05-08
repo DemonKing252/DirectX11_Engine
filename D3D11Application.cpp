@@ -75,6 +75,11 @@ void D3D11Application::ClearRenderTargetView()
 	m_d3dDeviceContext->ClearRenderTargetView(m_d3dBackBuffer, rgba);
 }
 
+void D3D11Application::ClearDepthAndStencil()
+{
+	// In the future..
+}
+
 void D3D11Application::Update()
 {
 	gfx.Update(m_d3dDevice, m_d3dDeviceContext);
@@ -98,6 +103,7 @@ void D3D11Application::Clean()
 	m_d3dDevice->Release();
 	m_d3dDeviceContext->Release();
 	m_d3dBackBuffer->Release();
+	m_d3dSwapChain->Release();
 }
 
 D3D11Application::~D3D11Application()

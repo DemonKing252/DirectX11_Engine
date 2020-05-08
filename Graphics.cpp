@@ -1,4 +1,4 @@
-#include "Graphics.h"
+﻿#include "Graphics.h"
 
 Graphics::Graphics()
 {
@@ -18,6 +18,13 @@ Graphics::~Graphics()
 {
 
 }
+DirectX::XMMATRIX InverseTranspose(DirectX::CXMMATRIX M)
+{// B = (A−1)T (the inverse transpose of A) 
+	DirectX::XMMATRIX A = M;
+	A.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(A);
+	return DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, A));
+}
 
 void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
@@ -32,7 +39,7 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	/* Compile the vertex shader */
 	{
 		D3DCompileFromFile(L"VertexShader.hlsl", 0, 0, "VSMain", "vs_4_0", 0, 0, &vs, &errorQueue);
-		if (errorQueue != nullptr)
+		if (errorQueue != S_OK)
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
 			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Vertex Shader Could Not Compile!", 0);
@@ -42,7 +49,7 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	/* Compile the pixel shader */
 	{
 		D3DCompileFromFile(L"PixelShader.hlsl", 0, 0, "PSMain", "ps_4_0", 0, 0, &ps, &errorQueue);
-		if (errorQueue != nullptr)
+		if (errorQueue != S_OK)
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
 			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Pixel Shader Could Not Compile!", 0);
@@ -67,6 +74,10 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		// layout 2 -> 2D vector representing vertex texture coordinates
 		// 8 bytes in V-RAM
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+
+		// layout 3 -> 3D vector representing vertex texture normals
+		// 8 bytes in V-RAM
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
 	ThrowIfFailed(device->CreateInputLayout(inputLayout, ARRAYSIZE(inputLayout), vs->GetBufferPointer(), vs->GetBufferSize(), &m_d3dInputLayout));
@@ -99,36 +110,36 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 	std::array<Vertex, 24> vertices =
 	{
-		//					[	vertex position	   ]					[texture coord] 
-		/*0*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  },
-		/*1*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  },
-		/*2*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  },
-		/*3*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  },
-			
-		/*4*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  },
-		/*5*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  },
-		/*6*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  },
-		/*7*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  },
-				
-		/*8*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  },
-		/*9*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  },
-		/*10*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  },
-		/*11*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  },
-			
-		/*12*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  },
-		/*13*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  },
-		/*14*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  },
-		/*15*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  },
-				
-		/*16*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  },
-		/*17*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  },
-		/*18*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  },
-		/*19*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  },
-			
-		/*20*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  },
-		/*21*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  },
-		/*22*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  },
-		/*23*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  },
+		//					[	vertex position	   ]					[texture coord]			[ normal ]
+		/*0*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f},
+		/*1*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f},
+		/*2*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f},
+		/*3*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f},
+																					
+		/*4*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f},
+		/*5*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f},
+		/*6*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f},
+		/*7*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f},
+																						
+		/*8*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f},
+		/*9*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f},
+		/*10*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f},
+		/*11*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f},
+																						
+		/*12*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f},
+		/*13*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f},
+		/*14*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f},
+		/*15*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f},
+																						
+		/*16*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f},
+		/*17*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f},
+		/*18*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f},
+		/*19*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f},
+																						
+		/*20*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
+		/*21*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
+		/*22*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
+		/*23*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
 	};
 	UINT indices[36]
 	{
@@ -201,8 +212,8 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	// why is this so low? I've been too lazy to add a feature to control the framerate
 	zaxis_angle += 0.00125f;
-	c_ps_Buffer.color.x = 1.0f - (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
-	c_ps_Buffer.color.y =        (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
+	c_ps_Buffer.Color.x = 1.0f - (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
+	c_ps_Buffer.Color.y =        (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
 	
 	//OutputDebugString((LPCSTR)std::to_string(c_ps_Buffer.color.x));
 
@@ -222,6 +233,8 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	DirectX::XMMATRIX View = DirectX::XMMatrixLookAtLH(D3DUtil::Get().m_EyePos,
 													   EyeFocus, 
 													   Up);
+
+	DirectX::XMStoreFloat4(&c_ps_Buffer.EyeWorldSpace, D3DUtil::Get().m_EyePos);
 	
 	// projection matrix (45 degrees left/right, with an aspect ration of 1 1/3 (screenWidth / screenHeight)
 	DirectX::XMMATRIX Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
@@ -235,15 +248,21 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	// finally, polulate a model matrix with transform information 
 	// must go in scale-rotate-translate order
 	DirectX::XMMATRIX Model =
-		DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *			// Scale
-		DirectX::XMMatrixRotationAxis(rotAxis, zaxis_angle) *   // Rotate
-		DirectX::XMMatrixTranslation(0.0f, 0.0f, 0.0f);			// Translate
+		DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+		DirectX::XMMatrixRotationAxis(rotAxis, zaxis_angle) *	// Rotate
+		DirectX::XMMatrixTranslation(0.0f, 0.0f, 0.0f);	// Translate
 	
 	// multiply our 3 matricies to get the world matrix
-	c_vs_Buffer.World = Model * View * Projection;
+	c_vs_Buffer.World = DirectX::XMMatrixTranspose(Model * View * Projection);
 
+	// Actual World Matrix = Transpose(Inverse(MVP))
+
+	c_vs_Buffer.Model = DirectX::XMMatrixTranspose(InverseTranspose(Model));
+	c_vs_Buffer.View =  DirectX::XMMatrixTranspose(InverseTranspose(View));
+	c_vs_Buffer.Proj =  DirectX::XMMatrixTranspose(InverseTranspose(Projection));
+	
 	// transpose (our D3D11 vertex shader expects to have COLUMN majors!!!)
-	c_vs_Buffer.World = DirectX::XMMatrixTranspose(c_vs_Buffer.World);
+	//c_vs_Buffer.World = DirectX::XMMatrixTranspose(c_vs_Buffer.World);
 
 	// Update constant buffer in the vertex shader
 	// -----------------------------------------------------------------

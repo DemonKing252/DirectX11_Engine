@@ -8,14 +8,21 @@ struct Vertex
 {
 	DirectX::XMFLOAT3 Position;
 	DirectX::XMFLOAT2 TexCoord;
+	DirectX::XMFLOAT3 Normal;
 };
 struct D3D11_VS_CONSTANT_BUFFER
 {
 	DirectX::XMMATRIX World;
+
+	DirectX::XMMATRIX Model;
+	DirectX::XMMATRIX View;
+	DirectX::XMMATRIX Proj;
+
 };
 struct D3D11_PS_CONSTANT_BUFFER
 {
-	DirectX::XMFLOAT4 color = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	DirectX::XMFLOAT4 Color = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
+	DirectX::XMFLOAT4 EyeWorldSpace;
 };
 class DirectXException
 {

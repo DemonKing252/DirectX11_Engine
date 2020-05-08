@@ -17,7 +17,7 @@ public:
 	DirectX::XMFLOAT3 m_OuterCamera;
 	
 	// x axis
-	FLOAT m_Yaw = 0.0f;	
+	FLOAT m_Yaw = -90.0f;	
 	// y axis
 	FLOAT m_Pitch = 0.0f; 
 	

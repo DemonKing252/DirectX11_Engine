@@ -33,7 +33,8 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine
 			window.MessageLoop(msg);
 
 			D3D11Engine::Get().ClearRenderTargetView();
-			
+			D3D11Engine::Get().ClearDepthAndStencil();
+
 			D3D11Engine::Get().Update();
 			D3D11Engine::Get().Draw();
 			
