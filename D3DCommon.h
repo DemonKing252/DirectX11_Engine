@@ -4,8 +4,20 @@
 #include <Windows.h>
 #include <iostream>
 #include <string>
-#include "PointLight.h"
 #define MaxLights 2
+struct PointLight
+{
+	DirectX::XMFLOAT3 Position;
+	FLOAT SpecularStrength;
+
+	DirectX::XMFLOAT3 Strength;
+	FLOAT FallOffStart;
+
+	DirectX::XMFLOAT3 Direction;
+	FLOAT FallOffEnd;
+
+};
+
 struct Vertex
 {
 	DirectX::XMFLOAT3 Position;

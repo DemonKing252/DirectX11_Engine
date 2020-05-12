@@ -24,7 +24,6 @@
     <ClCompile Include="D3D11Application.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="MathUtil.cpp" />
-    <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WinMain.cpp" />
   </ItemGroup>
@@ -34,7 +33,6 @@
     <ClInclude Include="D3D11Application.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="MathUtil.h" />
-    <ClInclude Include="PointLight.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
