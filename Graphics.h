@@ -7,10 +7,10 @@
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "DirectXTK.lib")
-
 typedef class Graphics
 {
 public:
+
 	Graphics(Graphics* other) = delete;
 	Graphics();
 	~Graphics();
@@ -21,7 +21,6 @@ public:
 	void Draw(ID3D11DeviceContext* deviceContext);
 	void Clean();
 private:
-
 	float zaxis_angle = 0.0f;
 
 	// shader info
@@ -38,7 +37,8 @@ private:
 	ID3D11InputLayout* m_d3dInputLayout;
 
 	D3D11_VS_CONSTANT_BUFFER c_vs_Buffer;
-	D3D11_PS_CONSTANT_BUFFER c_ps_Buffer;
+	D3D11_PS_CONSTANT_BUFFER ps_cBuffer;
+
 	// texturing
 	ID3D11ShaderResourceView* brick_shaderResource;
 	ID3D11SamplerState* m_d3dSamplerState;

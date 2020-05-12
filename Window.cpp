@@ -128,7 +128,8 @@ void Window::MessageLoop(MSG msg)
 			D3DUtil::Get().rightPressed = true;
 			m_pCamera->m_CurrMouse = DirectX::XMFLOAT2(LOWORD(msg.lParam), HIWORD(msg.lParam));
 		}
-			
+		
+
 		if (msg.message == WM_RBUTTONUP) 
 			D3DUtil::Get().rightPressed = false;	
 		

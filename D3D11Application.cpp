@@ -35,7 +35,6 @@ void D3D11Application::InitDeviceAndSwapChain(const Window* window)
 	));
 }
 
-
 void D3D11Application::InitRenderTarget(Window* window)
 {
 	ID3D11Texture2D* pBackBuffer;

@@ -4,6 +4,8 @@
 #include <Windows.h>
 #include <iostream>
 #include <string>
+#include "PointLight.h"
+#define MaxLights 2
 struct Vertex
 {
 	DirectX::XMFLOAT3 Position;
@@ -23,7 +25,10 @@ struct D3D11_PS_CONSTANT_BUFFER
 {
 	DirectX::XMFLOAT4 Color = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	DirectX::XMFLOAT4 EyeWorldSpace;
+
+	PointLight pointLights[MaxLights];
 };
+
 class DirectXException
 {
 public:
@@ -46,6 +51,7 @@ public:
 	{
 		return instance;
 	}
+	DirectX::XMFLOAT3 Light = DirectX::XMFLOAT3(2.0f, 0.0f, 0.0f);
 
 
 private:

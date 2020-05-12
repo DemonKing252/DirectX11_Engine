@@ -1,8 +1,30 @@
+#define MaxLights 2
+struct PointLight
+{
+	// 4 bytes for each floating point number
+
+	// 16 bytes
+	float3 Position;		
+	float FallOffStart;
+
+	// 16 bytes
+	float3 Strength;
+	float SpecularStrength;
+	
+	// 16 bytes
+	float3 Direction;	
+	float FallOffEnd;
+	
+};
+
 cbuffer PSConstantBuffer : register(b0)
 {
 	float4 Color;
-	float4 EyeWorldSpace;
+	float4 EyeWorldSpace;		// Eye Position (World Space)
+
+	PointLight light[MaxLights];
 }
+
 
 struct PSLayout
 {
@@ -13,25 +35,6 @@ struct PSLayout
 };
 Texture2D g_texture : TEXTURE : register(t0);
 SamplerState g_samplerState : SAMPLE : register(s0);
-
-struct Light
-{
-	float Strength;
-	float3 Position;
-	float3 Color;
-	float FallOffStart;
-	float FallOffEnd;
-};
-
-//struct Light
-//{
-//	float3 Strength;
-//	float FalloffStart; // point/spot light only
-//	float3 Direction;   // directional/spot light only
-//	float FalloffEnd;   // point/spot light only
-//	float3 Position;    // point light only
-//	float SpotPower;    // spot light only
-//};
 
 float CalcAttenuation(float d, float falloffStart, float falloffEnd)
 {
@@ -63,7 +66,7 @@ float3 BlinnPhong(float3 lightStrength, float3 lightVec, float3 normal, float3 t
 
 	return (float3(1.0f, 1.0f, 1.0f) + specAlbedo) * lightStrength;
 }
-float3 ComputePointLight(Light L, float3 pos, float3 normal, float3 toEye)
+float3 ComputePointLight(PointLight L, float3 pos, float3 normal, float3 toEye)
 {
 	// The vector from the surface to the light.
 	float3 lightVec = L.Position - pos;
@@ -80,7 +83,7 @@ float3 ComputePointLight(Light L, float3 pos, float3 normal, float3 toEye)
 
 	// Scale light down by Lambert's cosine law.
 	float ndotl = max(dot(lightVec, normal), 0.0f);
-	float3 lightStrength = L.Color * ndotl;
+	float3 lightStrength = L.Strength * ndotl;
 
 	// Attenuate light by distance.
 	float att = CalcAttenuation(d, L.FallOffStart, L.FallOffEnd);
@@ -91,40 +94,54 @@ float3 ComputePointLight(Light L, float3 pos, float3 normal, float3 toEye)
 
 float4 PSMain(PSLayout layout) : SV_TARGET
 {
-	Light g_pointLight;
-	const float3 ambientLight = float3(0.3f, 0.3f, 0.3f);
+	//PointLight light[MaxLights];
 
-	// light information
-	g_pointLight.Position = float3(-2.0f, 0.0f, 0.0f);
-	g_pointLight.Color = float3(1.5f, 1.5f, 0.0f);
-	g_pointLight.Strength = 1.0f;
-	g_pointLight.FallOffStart = 0.1f;
-	g_pointLight.FallOffEnd = 15.0f;
+	//light[0].Position = float4(0.0f, 2.0f, 0.0f, 1.0f);	
+	//light[0].Strength = float4(1.0f, 0.0f, 0.0f, 1.0f);
+	//light[0].SpecularStrength = 1.0f;
+	//light[0].FallOffStart = 0.1f;
+	//light[0].FallOffEnd = 10.0f;
+	//
+	//light[1].Position = float4(0.0f, -2.0f, 0.0f, 1.0f);
+	//light[1].Strength = float4(0.0f, 1.0f, 0.0f, 1.0f);
+	//light[1].SpecularStrength = 1.0f;
+	//light[1].FallOffStart = 0.1f;
+	//light[1].FallOffEnd = 10.0f;
+
+
+	const float3 ambientLight = float3(0.3f, 0.3f, 0.3f);
 
 	float3 totalLight = float3(0, 0, 0);
 	float3 specular = float3(0, 0, 0), diff = float3(0, 0, 0), diffuse = float3(0, 0, 0);
 
 	float4 g_sampleColor = g_texture.Sample(g_samplerState, layout.texCoord);
 
-	// Calculate distance for Attenuation strength:
-	float distance = length(g_pointLight.Position - layout.fragPos);
+	for (int i = 0; i < MaxLights; i++)
+	{
+		// Calculate distance for *attenuation* strength:
+		float distance = length(light[i].Position.xyz - layout.fragPos);
 
-	// Calculate Diffuse:
-	float3 norm = normalize(layout.normal);
-	float3 lightDir = normalize(g_pointLight.Position - layout.fragPos);
-	diff = max(dot(norm, lightDir), 0.0f);
-	diffuse += (diff * g_pointLight.Color * g_pointLight.Strength) * ((g_pointLight.FallOffEnd - distance) / (g_pointLight.FallOffEnd - g_pointLight.FallOffStart));
+		if (distance <= light[i].FallOffEnd)
+		{
+			// Calculate Diffuse:
+			float3 norm = normalize(layout.normal);
+			float3 lightDir = normalize(light[i].Position.xyz - layout.fragPos);
+			diff = max(dot(norm, lightDir), 0.0f);
+			diffuse += (diff * light[i].Strength.xyz * light[i].SpecularStrength) * ((light[i].FallOffEnd - distance) / (light[i].FallOffEnd - light[i].FallOffStart));
+			
 
-	// Calculate Specular:
-	float3 viewDir = normalize(EyeWorldSpace.xyz - layout.fragPos);
-	float3 reflectDir = reflect(-lightDir, norm);
-	float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32) / (distance * distance);
-	specular += g_pointLight.Strength * spec * g_pointLight.Color;
+			// Calculate Specular:
+			float3 viewDir = normalize(EyeWorldSpace.xyz - layout.fragPos);
+			float3 reflectDir = reflect(-lightDir, norm);
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32) / (distance * distance);
+			specular += light[i].SpecularStrength * spec * light[i].Strength.xyz;
 
+			//totalLight += ambientLight*0.2f + ComputePointLight(light[i], layout.fragPos, layout.normal, EyeWorldSpace.xyz);
+		}
+		
+	}
 	totalLight = (ambientLight + diffuse + specular);
-	
-	//totalLight = ambientLight + ComputePointLight(g_pointLight, layout.fragPos, norm, float3(0.0f, 0.0f, 3.0f));
-
+	//totalLight = ambientLight + ComputePointLight(light[i], layout.fragPos, layout.normal, EyeWorldSpace.xyz);
 	// Sampler state (texture) multiplied by the total light that we calculated
 	return (g_sampleColor * float4(totalLight, 1.0f));
 }

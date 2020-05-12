@@ -104,30 +104,30 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	std::array<Vertex, 24> vertices =
 	{
 		//					[	vertex position	   ]					[texture coord]			[ normal ]
-		/*0*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f},
-		/*1*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f},
-		/*2*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f},
-		/*3*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f},
-																					
-		/*4*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f},
-		/*5*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f},
-		/*6*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f},
-		/*7*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f},
+		/*0*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f },
+		/*1*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f },
+		/*2*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f },
+		/*3*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f },
+																															   
+		/*4*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f  },
+		/*5*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f  },
+		/*6*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f  },
+		/*7*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f  },
+																															   
+		/*8*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f },
+		/*9*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f },
+		/*10*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f },
+		/*11*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f },
 																						
-		/*8*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f},
-		/*9*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f},
-		/*10*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f},
-		/*11*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f},
-																						
-		/*12*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f},
-		/*13*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f},
-		/*14*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f},
-		/*15*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f},
-																						
-		/*16*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f},
-		/*17*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f},
-		/*18*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f},
-		/*19*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f},
+		/*12*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f },
+		/*13*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f },
+		/*14*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f },
+		/*15*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f },
+																															  
+		/*16*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f },
+		/*17*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f },
+		/*18*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f },
+		/*19*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f },
 																						
 		/*20*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
 		/*21*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
@@ -193,6 +193,20 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	iSubResource.pSysMem = &indices;
 
 	ThrowIfFailed(device->CreateBuffer(&iBufferDesc, &iSubResource, &m_d3dIndexBuffer));
+
+
+	ps_cBuffer.pointLights[0].Position = { 2.0f, 0.0f, 0.0f };
+	ps_cBuffer.pointLights[0].Strength = { 0.0f, 1.0f, 0.0f };
+	ps_cBuffer.pointLights[0].SpecularStrength = 1.0f;
+	ps_cBuffer.pointLights[0].FallOffStart = 1.0f;
+	ps_cBuffer.pointLights[0].FallOffEnd = 10.0f;
+
+	ps_cBuffer.pointLights[1].Position = { -2.0f, 0.0f, 0.0f };
+	ps_cBuffer.pointLights[1].Strength = { 1.0f, 0.0f, 0.0f };
+	ps_cBuffer.pointLights[1].SpecularStrength = 1.0f;
+	ps_cBuffer.pointLights[1].FallOffStart = 1.0f;
+	ps_cBuffer.pointLights[1].FallOffEnd = 10.0f;
+
 }
 
 void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -205,8 +219,8 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	// why is this so low? I've been too lazy to add a feature to control the framerate
 	zaxis_angle += 0.00125f;
-	c_ps_Buffer.Color.x = 1.0f - (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
-	c_ps_Buffer.Color.y =        (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
+	ps_cBuffer.Color.x = 1.0f - (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
+	ps_cBuffer.Color.y =        (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
 	
 	//OutputDebugString((LPCSTR)std::to_string(c_ps_Buffer.color.x));
 
@@ -227,7 +241,7 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 													   EyeFocus, 
 													   Up);
 
-	DirectX::XMStoreFloat4(&c_ps_Buffer.EyeWorldSpace, D3DUtil::Get().m_EyePos);
+	DirectX::XMStoreFloat4(&ps_cBuffer.EyeWorldSpace, D3DUtil::Get().m_EyePos);
 	
 	// projection matrix (45 degrees left/right, with an aspect ration of 1 1/3 (screenWidth / screenHeight)
 	DirectX::XMMATRIX Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
@@ -276,13 +290,12 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	deviceContext->VSSetConstantBuffers(0, 1, &m_d3dVSConstantBuffer);
 	// -----------------------------------------------------------------
 
-
 	// Update constant buffer in the pixel shader
 	// -----------------------------------------------------------------
 	D3D11_BUFFER_DESC c_ps_BufferDesc;
 	ZeroMemory(&c_ps_BufferDesc, sizeof(D3D11_BUFFER_DESC));
 
-	c_ps_BufferDesc.ByteWidth = sizeof(D3D11_PS_CONSTANT_BUFFER);
+	c_ps_BufferDesc.ByteWidth = (sizeof(D3D11_PS_CONSTANT_BUFFER) + 255) & ~255;
 	c_ps_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
 	c_ps_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	c_ps_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -290,11 +303,12 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	D3D11_SUBRESOURCE_DATA c_ps_SubResource;
 	ZeroMemory(&c_ps_SubResource, sizeof(D3D11_SUBRESOURCE_DATA));
 
-	c_ps_SubResource.pSysMem = &c_ps_Buffer;
+	c_ps_SubResource.pSysMem = &ps_cBuffer;
 
 	ThrowIfFailed(device->CreateBuffer(&c_ps_BufferDesc, &c_ps_SubResource, &m_d3dPSConstantBuffer));
 	deviceContext->PSSetConstantBuffers(0, 1, &m_d3dPSConstantBuffer);
 	// -----------------------------------------------------------------
+	
 }
 
 void Graphics::Draw(ID3D11DeviceContext* deviceContext)

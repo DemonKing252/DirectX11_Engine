@@ -10,27 +10,26 @@ class Camera;
 class Window;
 typedef class Window
 {
+public:
+	Window(Window* other) = delete;
+	Window(const LPCSTR className, const HINSTANCE hInstance, Camera& camera);
+	~Window();
+
+	void CreateWin32Window(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow);
+	void MessageLoop(MSG msg);
+
+	BOOL RegisterWinClass();
+	HWND GetWindow()const;
+	
+	Camera* GetCamera();
+	DirectX::XMFLOAT2 getWindowSize() const;
+
+	BOOL m_bQuitMessagePosted;
 private:
 	HWND m_hwnd;
 	WNDCLASS m_windowClass;
 	LPCSTR m_windowClassName;
 	DirectX::XMFLOAT2 windowSize;
 	Camera* m_pCamera;
-public:
-	BOOL m_bQuitMessagePosted;
-
-	void CreateWin32Window(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow);
-	BOOL RegisterWinClass();
-	HWND GetWindow()const;
-	DirectX::XMFLOAT2 getWindowSize() const;
-
-	Camera* GetCamera();
-
-	void MessageLoop(MSG msg);
-
-	Window(Window* other) = delete;
-	Window(const LPCSTR className, const HINSTANCE hInstance, Camera& camera);
-	~Window();
-
 } Window, HWND32;
 

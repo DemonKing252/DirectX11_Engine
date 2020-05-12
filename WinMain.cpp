@@ -5,8 +5,8 @@
 DirectX11_Engine::WinMain.cpp by Liam Blake (C) 2020 All Rights Reserved.
 
 Created: 2020-04-19
-Modified: 2020-05-04
-Lines of code: 611
+Modified: 2020-05-10
+Lines of code: 935
 
 *********************************************************************************/
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int mCmdShow)
@@ -15,7 +15,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine
 	Camera camera;
 	Window window("HWNDClass", hInstance, camera);
 
-
+	
 	if (!window.RegisterWinClass())
 	{
 		MessageBox(0, "Window Register Failed!", "HR ERROR", 0);
