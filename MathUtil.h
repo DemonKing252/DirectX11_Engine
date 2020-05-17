@@ -4,8 +4,9 @@
 class MathUtil
 {
 public:
+	static DirectX::XMMATRIX TransposeInverse(DirectX::CXMMATRIX M);
 	static DirectX::XMMATRIX InverseTranspose(DirectX::CXMMATRIX M);
-
+	
 	static double cos_radians(double _x);
 	static double sin_radians(double _y);
 

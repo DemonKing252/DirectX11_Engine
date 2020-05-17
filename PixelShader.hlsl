@@ -14,14 +14,11 @@ struct PointLight
 	// 16 bytes
 	float3 Direction;	
 	float FallOffEnd;
-	
 };
 
 cbuffer PSConstantBuffer : register(b0)
 {
-	float4 Color;
 	float4 EyeWorldSpace;		// Eye Position (World Space)
-
 	PointLight light[MaxLights];
 }
 
@@ -118,27 +115,24 @@ float4 PSMain(PSLayout layout) : SV_TARGET
 
 	for (int i = 0; i < MaxLights; i++)
 	{
-		// Calculate distance for *attenuation* strength:
+		// Calculate distance for attenuation:
 		float distance = length(light[i].Position.xyz - layout.fragPos);
-
 		if (distance <= light[i].FallOffEnd)
 		{
 			// Calculate Diffuse:
 			float3 norm = normalize(layout.normal);
 			float3 lightDir = normalize(light[i].Position.xyz - layout.fragPos);
 			diff = max(dot(norm, lightDir), 0.0f);
-			diffuse += (diff * light[i].Strength.xyz * light[i].SpecularStrength) * ((light[i].FallOffEnd - distance) / (light[i].FallOffEnd - light[i].FallOffStart));
-			
+			diffuse += (diff * light[i].Strength.xyz * light[i].SpecularStrength);// *((light[i].FallOffEnd - distance) / (light[i].FallOffEnd - light[i].FallOffStart));
 
 			// Calculate Specular:
 			float3 viewDir = normalize(EyeWorldSpace.xyz - layout.fragPos);
 			float3 reflectDir = reflect(-lightDir, norm);
-			float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32) / (distance * distance);
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0f), 32);// / (distance * distance);
 			specular += light[i].SpecularStrength * spec * light[i].Strength.xyz;
 
-			//totalLight += ambientLight*0.2f + ComputePointLight(light[i], layout.fragPos, layout.normal, EyeWorldSpace.xyz);
+			//totalLight += ambientLight*0.2f + ComputePointLight(light[i], layout.fragPos.xyz, layout.normal.xyz, EyeWorldSpace.xyz);
 		}
-		
 	}
 	totalLight = (ambientLight + diffuse + specular);
 	//totalLight = ambientLight + ComputePointLight(light[i], layout.fragPos, layout.normal, EyeWorldSpace.xyz);

@@ -1,6 +1,7 @@
 ﻿#include "Graphics.h"
 #include "Camera.h"
 #include "Window.h"
+#include "D3D11Application.h"
 Graphics::Graphics()
 {
 	// Zero out all out our buffers and layouts
@@ -37,6 +38,8 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
 			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Vertex Shader Could Not Compile!", 0);
+			Clean();
+			D3D11App::Get().Clean();
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -47,6 +50,8 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
 			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Pixel Shader Could Not Compile!", 0);
+			Clean();
+			D3D11App::Get().Clean();
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -87,7 +92,7 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
 
-	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -194,124 +199,38 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 	ThrowIfFailed(device->CreateBuffer(&iBufferDesc, &iSubResource, &m_d3dIndexBuffer));
 
+	PSConstantBuffer.pointLights[0].Position = { 0.0f, 0.0f, 0.0f };
+	PSConstantBuffer.pointLights[0].Strength = { 16.0f, 16.0f, 16.0f };
+	PSConstantBuffer.pointLights[0].SpecularStrength = 1.0f;
+	PSConstantBuffer.pointLights[0].FallOffStart = 0.1f;
+	PSConstantBuffer.pointLights[0].FallOffEnd = 8.0f;
 
-	ps_cBuffer.pointLights[0].Position = { 2.0f, 0.0f, 0.0f };
-	ps_cBuffer.pointLights[0].Strength = { 0.0f, 1.0f, 0.0f };
-	ps_cBuffer.pointLights[0].SpecularStrength = 1.0f;
-	ps_cBuffer.pointLights[0].FallOffStart = 1.0f;
-	ps_cBuffer.pointLights[0].FallOffEnd = 10.0f;
+	Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
+		800.0f / 600.0f, // Screen aspect
+		0.1f,			// Minimum vocal distance
+		300.0f);		// Maximum vocal distance
 
-	ps_cBuffer.pointLights[1].Position = { -2.0f, 0.0f, 0.0f };
-	ps_cBuffer.pointLights[1].Strength = { 1.0f, 0.0f, 0.0f };
-	ps_cBuffer.pointLights[1].SpecularStrength = 1.0f;
-	ps_cBuffer.pointLights[1].FallOffStart = 1.0f;
-	ps_cBuffer.pointLights[1].FallOffEnd = 10.0f;
-
+	VSConstantBuffer.Proj = DirectX::XMMatrixTranspose(Projection);
 }
 
 void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
-	if (m_d3dVSConstantBuffer != nullptr)
-		m_d3dVSConstantBuffer->Release();
-
-	if (m_d3dPSConstantBuffer != nullptr)
-		m_d3dPSConstantBuffer->Release();
-
 	// why is this so low? I've been too lazy to add a feature to control the framerate
-	zaxis_angle += 0.00125f;
-	ps_cBuffer.Color.x = 1.0f - (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
-	ps_cBuffer.Color.y =        (0.5f * (cos(zaxis_angle * 2.5f)) + 0.5f);
+	mCntr += 0.00125f;
 	
-	//OutputDebugString((LPCSTR)std::to_string(c_ps_Buffer.color.x));
-
-	c_vs_Buffer.World = DirectX::XMMatrixIdentity();
-
-	// eye position in world space
-	//DirectX::XMVECTOR EyePosition = DirectX::XMVectorSet(0.0f, 1.0f, -3.0f, 0.0f);
-	
-	// focus position in world space (where the camera is looking at)
-	DirectX::XMVECTOR EyeFocus = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
-
-	// up vector (represents the orientation of the camera). 
-	// [ 0, -1, 0 ] to make the camera look upside down
-	DirectX::XMVECTOR Up = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-
 	// view matrix (left handed coordinate system)
-	DirectX::XMMATRIX View = DirectX::XMMatrixLookAtLH(D3DUtil::Get().m_EyePos,
-													   EyeFocus, 
-													   Up);
+	View = DirectX::XMMatrixLookAtLH(D3DUtil::Get().m_EyePos,
+										DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
+										DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 
-	DirectX::XMStoreFloat4(&ps_cBuffer.EyeWorldSpace, D3DUtil::Get().m_EyePos);
-	
-	// projection matrix (45 degrees left/right, with an aspect ration of 1 1/3 (screenWidth / screenHeight)
-	DirectX::XMMATRIX Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
-																	 800.0f/600.0f, // Screen aspect
-																	 0.1f,			// Minimum vocal distance
-																	 300.0f);		// Maximum vocal distance
+	DirectX::XMStoreFloat4(&PSConstantBuffer.EyeWorldSpace, D3DUtil::Get().m_EyePos);
 
-	// what axis should our object rotate on?
-	DirectX::XMVECTOR rotAxis = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
+	rotAxis = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
-	// finally, polulate a model matrix with transform information 
-	// must go in scale-rotate-translate order
-	DirectX::XMMATRIX Model =
-		DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
-		DirectX::XMMatrixRotationAxis(rotAxis, zaxis_angle) *	// Rotate
-		DirectX::XMMatrixTranslation(0.0f, 0.0f, 0.0f);	// Translate
-	
-	// multiply our 3 matricies to get the world matrix
-	c_vs_Buffer.World = DirectX::XMMatrixTranspose(Model * View * Projection);
-
-	// Actual World Matrix = Transpose(Inverse(MVP))
-
-	c_vs_Buffer.Model = DirectX::XMMatrixTranspose(MathUtil::InverseTranspose(Model));
-	c_vs_Buffer.View =  DirectX::XMMatrixTranspose(MathUtil::InverseTranspose(View));
-	c_vs_Buffer.Proj =  DirectX::XMMatrixTranspose(MathUtil::InverseTranspose(Projection));
-	
-	// transpose (our D3D11 vertex shader expects to have COLUMN majors!!!)
-	//c_vs_Buffer.World = DirectX::XMMatrixTranspose(c_vs_Buffer.World);
-
-	// Update constant buffer in the vertex shader
-	// -----------------------------------------------------------------
-	D3D11_BUFFER_DESC c_vs_BufferDesc;
-	ZeroMemory(&c_vs_BufferDesc, sizeof(D3D11_BUFFER_DESC));
-
-	c_vs_BufferDesc.ByteWidth = sizeof(D3D11_VS_CONSTANT_BUFFER);
-	c_vs_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	c_vs_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	c_vs_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	D3D11_SUBRESOURCE_DATA cSubResource;
-	ZeroMemory(&cSubResource, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	cSubResource.pSysMem = &c_vs_Buffer;
-
-	ThrowIfFailed(device->CreateBuffer(&c_vs_BufferDesc, &cSubResource, &m_d3dVSConstantBuffer));
-	deviceContext->VSSetConstantBuffers(0, 1, &m_d3dVSConstantBuffer);
-	// -----------------------------------------------------------------
-
-	// Update constant buffer in the pixel shader
-	// -----------------------------------------------------------------
-	D3D11_BUFFER_DESC c_ps_BufferDesc;
-	ZeroMemory(&c_ps_BufferDesc, sizeof(D3D11_BUFFER_DESC));
-
-	c_ps_BufferDesc.ByteWidth = (sizeof(D3D11_PS_CONSTANT_BUFFER) + 255) & ~255;
-	c_ps_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	c_ps_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	c_ps_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	D3D11_SUBRESOURCE_DATA c_ps_SubResource;
-	ZeroMemory(&c_ps_SubResource, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	c_ps_SubResource.pSysMem = &ps_cBuffer;
-
-	ThrowIfFailed(device->CreateBuffer(&c_ps_BufferDesc, &c_ps_SubResource, &m_d3dPSConstantBuffer));
-	deviceContext->PSSetConstantBuffers(0, 1, &m_d3dPSConstantBuffer);
-	// -----------------------------------------------------------------
-	
+	VSConstantBuffer.View = DirectX::XMMatrixTranspose(View);
 }
 
-void Graphics::Draw(ID3D11DeviceContext* deviceContext)
+void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
 	UINT offset = 0;
 	UINT stride = sizeof(Vertex);
@@ -325,18 +244,102 @@ void Graphics::Draw(ID3D11DeviceContext* deviceContext)
 	deviceContext->PSSetSamplers(0, 1, &m_d3dSamplerState);
 	deviceContext->PSSetShaderResources(0, 1, &brick_shaderResource);
 
-	// draw call
-	deviceContext->DrawIndexed(36, 0, 0);
+	DirectX::XMFLOAT3 cubeTranslate[10] = 
+	{
+		DirectX::XMFLOAT3({2.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({-2.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({4.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({-4.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({6.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({-6.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({8.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({-8.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({10.0f, 0.0f, 0.0f}),
+		DirectX::XMFLOAT3({-10.0f, 0.0f, 0.0f}),
+	};
+
+	for (int i = 0; i < 10; i++)
+	{
+		Model = DirectX::XMMatrixIdentity();
+		Model =
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+			DirectX::XMMatrixRotationAxis(rotAxis, mCntr) *		// Rotate
+			DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
+
+		// Global transform matrix
+		VSConstantBuffer.World = DirectX::XMMatrixTranspose(Model * View * Projection);
+		
+		// Local transform matrix
+		VSConstantBuffer.Model = DirectX::XMMatrixTranspose(Model);
+
+		// update our model and world matrix so we can translate this object!
+		UpdateConstants(device, deviceContext);
+
+		/* Drawing with devCon->Draw() will draw vertices in seqential order using the vertex buffer only */
+
+		// draw call with our index buffer
+		deviceContext->DrawIndexed(36, 0, 0);
+	}
+}
+
+void Graphics::UpdateConstants(ID3D11Device * device, ID3D11DeviceContext * deviceContext)
+{
+	if (m_d3dVSConstantBuffer != nullptr)
+		m_d3dVSConstantBuffer->Release();
+
+	if (m_d3dPSConstantBuffer != nullptr)
+		m_d3dPSConstantBuffer->Release();
+	// Update constant buffer in the vertex shader
+	// -----------------------------------------------------------------
+	D3D11_BUFFER_DESC c_vs_BufferDesc;
+	ZeroMemory(&c_vs_BufferDesc, sizeof(D3D11_BUFFER_DESC));
+
+	c_vs_BufferDesc.ByteWidth = sizeof(D3D11_VS_CONSTANT_BUFFER);
+	c_vs_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	c_vs_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	c_vs_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	D3D11_SUBRESOURCE_DATA c_vs_SubResource;
+	ZeroMemory(&c_vs_SubResource, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	c_vs_SubResource.pSysMem = &VSConstantBuffer;
+
+	ThrowIfFailed(device->CreateBuffer(&c_vs_BufferDesc, &c_vs_SubResource, &m_d3dVSConstantBuffer));
+	deviceContext->VSSetConstantBuffers(0, 1, &m_d3dVSConstantBuffer);
+
+	// Update constant buffer in the pixel shader
+	// -----------------------------------------------------------------
+	D3D11_BUFFER_DESC c_ps_BufferDesc;
+	ZeroMemory(&c_ps_BufferDesc, sizeof(D3D11_BUFFER_DESC));
+
+	c_ps_BufferDesc.ByteWidth = sizeof(D3D11_PS_CONSTANT_BUFFER);
+	c_ps_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+	c_ps_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	c_ps_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+	D3D11_SUBRESOURCE_DATA c_ps_SubResource;
+	ZeroMemory(&c_ps_SubResource, sizeof(D3D11_SUBRESOURCE_DATA));
+
+	c_ps_SubResource.pSysMem = &PSConstantBuffer;
+
+	ThrowIfFailed(device->CreateBuffer(&c_ps_BufferDesc, &c_ps_SubResource, &m_d3dPSConstantBuffer));
+	deviceContext->PSSetConstantBuffers(0, 1, &m_d3dPSConstantBuffer);
+	// -----------------------------------------------------------------
 }
 
 
 void Graphics::Clean()
 {
+	brick_shaderResource->Release();
+	m_d3dSamplerState->Release();
+
 	m_d3dVertexBuffer->Release();
 	m_d3dIndexBuffer->Release();
+	
 	m_d3dInputLayout->Release();
 	m_d3dVertexShader->Release();
 	m_d3dPixelShader->Release();
+	
 	m_d3dVSConstantBuffer->Release();
 	m_d3dPSConstantBuffer->Release();
 }

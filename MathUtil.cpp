@@ -1,5 +1,5 @@
 ﻿#include "MathUtil.h"
-DirectX::XMMATRIX MathUtil::InverseTranspose(DirectX::CXMMATRIX M)
+DirectX::XMMATRIX MathUtil::TransposeInverse(DirectX::CXMMATRIX M)
 {
 	// B = (A−1)T (the inverse transpose of A) 
 	DirectX::XMMATRIX A = M;
@@ -7,6 +7,15 @@ DirectX::XMMATRIX MathUtil::InverseTranspose(DirectX::CXMMATRIX M)
 	DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(A);
 	return DirectX::XMMatrixTranspose(DirectX::XMMatrixInverse(&det, A));
 	
+}
+DirectX::XMMATRIX MathUtil::InverseTranspose(DirectX::CXMMATRIX M)
+{
+	// B = (A−1)T (the inverse transpose of A) 
+	DirectX::XMMATRIX A = M;
+	A.r[3] = DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f);
+	DirectX::XMVECTOR det = DirectX::XMMatrixDeterminant(A);
+	return DirectX::XMMatrixInverse(&det, DirectX::XMMatrixTranspose(A));
+
 }
 
 double MathUtil::cos_radians(double _x)

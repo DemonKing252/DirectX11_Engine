@@ -13,11 +13,12 @@ public:
 
 	// Initalizing D3D
 	void InitDeviceAndSwapChain(const Window* window);
+	void InitDepthAndStencilView(const Window* window);
 	void InitRenderTarget(Window* window);
 	
 	// Game loop
 	void ClearRenderTargetView();
-	void ClearDepthAndStencil();
+	void ClearDepthAndStencilView();
 	void Update();
 	void Draw();
 	void PresentSwapChain();
@@ -29,11 +30,11 @@ public:
 
 	static D3D11Application& Get()
 	{
-		return s_pInstance;
+		return s_Instance;
 	}
 
 private:
-	static D3D11Application s_pInstance;
+	static D3D11Application s_Instance;
 	Graphics gfx;
 
 	// Main device adapters 
@@ -44,7 +45,8 @@ private:
 
 	// Keyboard and mouse
 
-
+	// Depth and Stencil
+	ID3D11DepthStencilView* m_d3dDepthStencilView;
 	
 } D3D11Application, D3D11App, D3D11Engine;
 

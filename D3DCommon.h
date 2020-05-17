@@ -4,7 +4,8 @@
 #include <Windows.h>
 #include <iostream>
 #include <string>
-#define MaxLights 2
+#define MaxLights 1
+
 struct PointLight
 {
 	DirectX::XMFLOAT3 Position;
@@ -31,11 +32,9 @@ struct D3D11_VS_CONSTANT_BUFFER
 	DirectX::XMMATRIX Model;
 	DirectX::XMMATRIX View;
 	DirectX::XMMATRIX Proj;
-
 };
 struct D3D11_PS_CONSTANT_BUFFER
 {
-	DirectX::XMFLOAT4 Color = DirectX::XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f);
 	DirectX::XMFLOAT4 EyeWorldSpace;
 
 	PointLight pointLights[MaxLights];
