@@ -1,0 +1,58 @@
+/*
+float CalcAttenuation(float d, float falloffStart, float falloffEnd)
+{
+	// Linear falloff.
+	return saturate((falloffEnd - d) / (falloffEnd - falloffStart));
+}
+float3 SchlickFresnel(float3 R0, float3 normal, float3 lightVec)
+{
+	float cosIncidentAngle = saturate(dot(normal, lightVec));
+
+	float f0 = 1.0f - cosIncidentAngle;
+	float3 reflectPercent = R0 + (1.0f - R0)*(f0*f0*f0*f0*f0);
+
+	return reflectPercent;
+}
+float3 BlinnPhong(float3 lightStrength, float3 lightVec, float3 normal, float3 toEye)
+{
+	const float m = 256.0f;
+	float3 halfVec = normalize(toEye + lightVec);
+
+	float roughnessFactor = (m + 8.0f)*pow(max(dot(halfVec, normal), 0.0f), m) / 8.0f;
+	float3 fresnelFactor = SchlickFresnel(1.0f, halfVec, lightVec);
+
+	float3 specAlbedo = fresnelFactor * roughnessFactor;
+
+	// Our spec formula goes outside [0,1] range, but we are 
+	// doing LDR rendering.  So scale it down a bit.
+	specAlbedo = specAlbedo / (specAlbedo + 1.0f);
+
+	return (float3(1.0f, 1.0f, 1.0f) + specAlbedo) * lightStrength;
+}
+float3 ComputePointLight(PointLight L, float3 pos, float3 normal, float3 toEye)
+{
+	// The vector from the surface to the light.
+	float3 lightVec = L.Position - pos;
+
+	// The distance from surface to light.
+	float d = length(lightVec);
+
+	// Range test.
+	if (d > L.FallOffEnd)
+		return 0.0f;
+
+	// Normalize the light vector.
+	lightVec /= d;
+
+	// Scale light down by Lambert's cosine law.
+	float ndotl = max(dot(lightVec, normal), 0.0f);
+	float3 lightStrength = L.Strength * ndotl;
+
+	// Attenuate light by distance.
+	float att = CalcAttenuation(d, L.FallOffStart, L.FallOffEnd);
+	lightStrength *= att;
+
+	return BlinnPhong(lightStrength, lightVec, normal, toEye);
+}
+*/
+	//totalLight = ambientLight + ComputePointLight(light[i], layout.fragPos, layout.normal, EyeWorldSpace.xyz);

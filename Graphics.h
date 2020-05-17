@@ -52,4 +52,3 @@ private:
 	DirectX::XMVECTOR rotAxis;
 
 } Graphics, GFX;
-

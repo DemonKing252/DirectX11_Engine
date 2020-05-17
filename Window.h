@@ -32,4 +32,3 @@ private:
 	DirectX::XMFLOAT2 windowSize;
 	std::shared_ptr<Camera> m_pCamera;
 } Window, HWND32;
-

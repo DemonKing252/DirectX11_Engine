@@ -1,7 +1,6 @@
 cbuffer VSConstantBuffer : register(b0)
 {
 	matrix World;
-
 	matrix Model;
 	matrix View;
 	matrix Proj;
@@ -19,12 +18,10 @@ VSLayout VSMain(float3 position : POSITION, float2 texCoord : TEXCOORD, float3 n
 {
 	VSLayout layout;
 	
+	layout.position = mul(float4(position, 1.0f), World);
+	layout.texCoord = texCoord;
+	layout.normal = mul(normal, (float3x3) Model);
 	layout.fragPos = (float3)mul(float4(position, 1.0f), Model);
 
-	layout.position = mul(float4(position, 1.0f), World);
-	
-	layout.texCoord = texCoord;
-	layout.normal = mul(normal, (float3x3)Model);
-	
 	return layout;
 }

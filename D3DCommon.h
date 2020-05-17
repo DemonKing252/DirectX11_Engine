@@ -68,4 +68,3 @@ public:
 private:
 	static D3DUtil instance;
 };
-

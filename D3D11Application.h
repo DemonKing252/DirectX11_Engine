@@ -49,4 +49,3 @@ private:
 	mutable ID3D11DepthStencilView* m_d3dDepthStencilView;
 	
 } D3D11Application, D3D11App, D3D11Engine;
-

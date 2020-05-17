@@ -264,7 +264,7 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 		DirectX::XMFLOAT3({-10.0f, 0.0f, 0.0f}),
 	};
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < ARRAYSIZE(cubeTranslate); i++)
 	{
 		Model = DirectX::XMMatrixIdentity();
 		Model =

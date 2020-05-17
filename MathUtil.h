@@ -11,4 +11,3 @@ public:
 	static double sin_radians(double _y);
 
 };
-
