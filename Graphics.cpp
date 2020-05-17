@@ -38,8 +38,11 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
 			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Vertex Shader Could Not Compile!", 0);
+			errorQueue->Release();
+
 			Clean();
 			D3D11App::Get().Clean();
+			
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -50,8 +53,11 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
 			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Pixel Shader Could Not Compile!", 0);
+			errorQueue->Release();
+			
 			Clean();
 			D3D11App::Get().Clean();
+			
 			exit(EXIT_FAILURE);
 		}
 	}

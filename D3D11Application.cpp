@@ -2,7 +2,7 @@
 #include "Window.h"
 D3D11Application D3D11Application::s_Instance = D3D11Application();
 
-void D3D11Application::InitDeviceAndSwapChain(const Window* window)
+void D3D11Application::InitDeviceAndSwapChain(std::shared_ptr<Window> window) const
 {
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
 	ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
@@ -35,7 +35,7 @@ void D3D11Application::InitDeviceAndSwapChain(const Window* window)
 	));
 }
 
-void D3D11Application::InitDepthAndStencilView(const Window * window)
+void D3D11Application::InitDepthAndStencilView(std::shared_ptr<Window> window) const
 {
 	D3D11_TEXTURE2D_DESC depthDesc;
 	ZeroMemory(&depthDesc, sizeof(D3D11_TEXTURE2D_DESC));
@@ -65,8 +65,8 @@ void D3D11Application::InitDepthAndStencilView(const Window * window)
 	depthStencilTexture->Release();
 }
 
-void D3D11Application::InitRenderTarget(Window* window)
-{
+void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
+{ 
 	ID3D11Texture2D* pBackBuffer;
 	ZeroMemory(&pBackBuffer, sizeof(ID3D11Texture2D));
 

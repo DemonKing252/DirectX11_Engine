@@ -26,11 +26,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 
-Window::Window(const LPCSTR className, const HINSTANCE hInstance, Camera& camera)
+Window::Window(const LPCSTR className, const HINSTANCE hInstance, std::shared_ptr<Camera> camera)
 {
 	m_bQuitMessagePosted = false;
 
-	this->m_pCamera = &camera;
+	this->m_pCamera = camera;
 	// Step1: create a window class
 	ZeroMemory(&m_windowClass, sizeof(WNDCLASS));
 
@@ -98,7 +98,7 @@ DirectX::XMFLOAT2 Window::getWindowSize() const
 	return windowSize;
 }
 
-Camera * Window::GetCamera()
+std::shared_ptr<Camera> Window::GetCamera()
 {
 	return m_pCamera;
 	// TODO: insert return statement here

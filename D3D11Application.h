@@ -12,9 +12,9 @@ public:
 	D3D11Application(D3D11Application* other) = delete;
 
 	// Initalizing D3D
-	void InitDeviceAndSwapChain(const Window* window);
-	void InitDepthAndStencilView(const Window* window);
-	void InitRenderTarget(Window* window);
+	void InitDeviceAndSwapChain(std::shared_ptr<Window> window)const;
+	void InitDepthAndStencilView(std::shared_ptr<Window> window)const;
+	void InitRenderTarget(std::shared_ptr<Window> window)const;
 	
 	// Game loop
 	void ClearRenderTargetView();
@@ -35,18 +35,18 @@ public:
 
 private:
 	static D3D11Application s_Instance;
-	Graphics gfx;
+	mutable Graphics gfx;
 
 	// Main device adapters 
-	IDXGISwapChain* m_d3dSwapChain;
-	ID3D11Device* m_d3dDevice;
-	ID3D11DeviceContext* m_d3dDeviceContext;
-	ID3D11RenderTargetView* m_d3dBackBuffer;
+	mutable IDXGISwapChain* m_d3dSwapChain;
+	mutable ID3D11Device* m_d3dDevice;
+	mutable ID3D11DeviceContext* m_d3dDeviceContext;
+	mutable ID3D11RenderTargetView* m_d3dBackBuffer;
 
 	// Keyboard and mouse
 
 	// Depth and Stencil
-	ID3D11DepthStencilView* m_d3dDepthStencilView;
+	mutable ID3D11DepthStencilView* m_d3dDepthStencilView;
 	
 } D3D11Application, D3D11App, D3D11Engine;
 

@@ -12,7 +12,7 @@ typedef class Window
 {
 public:
 	Window(Window* other) = delete;
-	Window(const LPCSTR className, const HINSTANCE hInstance, Camera& camera);
+	Window(const LPCSTR className, const HINSTANCE hInstance, std::shared_ptr<Camera> camera);
 	~Window();
 
 	void CreateWin32Window(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow);
@@ -21,7 +21,7 @@ public:
 	BOOL RegisterWinClass();
 	HWND GetWindow()const;
 	
-	Camera* GetCamera();
+	std::shared_ptr<Camera> GetCamera();
 	DirectX::XMFLOAT2 getWindowSize() const;
 
 	BOOL m_bQuitMessagePosted;
@@ -30,6 +30,6 @@ private:
 	WNDCLASS m_windowClass;
 	LPCSTR m_windowClassName;
 	DirectX::XMFLOAT2 windowSize;
-	Camera* m_pCamera;
+	std::shared_ptr<Camera> m_pCamera;
 } Window, HWND32;
 
