@@ -1,7 +1,4 @@
 #pragma once
-#include <iostream>
-#include <array>
-#include <cmath>
 #include "D3DCommon.h"
 #include "Graphics.h"
 class Window;

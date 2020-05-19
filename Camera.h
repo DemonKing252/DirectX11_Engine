@@ -19,11 +19,6 @@ public:
 	DirectX::XMFLOAT2 m_LastMouse;
 	DirectX::XMFLOAT2 m_CurrMouse;
 
-	Camera()
-	{
-
-	}
-	~Camera()	
-	{
-	}
+	Camera();
+	~Camera();
 };

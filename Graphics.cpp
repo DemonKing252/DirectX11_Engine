@@ -5,10 +5,10 @@
 Graphics::Graphics()
 {
 	// Zero out all out our buffers and layouts
-	ZeroMemory(&m_d3dVSConstantBuffer, sizeof(D3D11_BUFFER_DESC));
-	ZeroMemory(&m_d3dPSConstantBuffer, sizeof(D3D11_BUFFER_DESC));
-	ZeroMemory(&m_d3dVertexBuffer, sizeof(D3D11_BUFFER_DESC));
-	ZeroMemory(&m_d3dIndexBuffer, sizeof(D3D11_BUFFER_DESC));
+	ZeroMemory(m_d3dVSConstantBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
+	ZeroMemory(m_d3dPSConstantBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
+	ZeroMemory(m_d3dVertexBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
+	ZeroMemory(m_d3dIndexBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
 	ZeroMemory(&m_d3dVertexShader, sizeof(ID3D11VertexShader));
 	ZeroMemory(&m_d3dPixelShader, sizeof(ID3D11PixelShader));
 	ZeroMemory(&m_d3dInputLayout, sizeof(ID3D11InputLayout));
@@ -112,38 +112,38 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 {
 	// Create our cube
 
-	std::array<Vertex, 24> vertices =
+	std::array<Vertex, 24> vertices = 
 	{
 		//					[	vertex position	   ]					[texture coord]			[ normal ]
-		/*0*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f },
-		/*1*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f },
-		/*2*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f },
-		/*3*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, -1.0f, 0.0f },
-																															   
-		/*4*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f  },
-		/*5*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f  },
-		/*6*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f  },
-		/*7*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 1.0f, 0.0f  },
-																															   
-		/*8*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f },
-		/*9*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f },
-		/*10*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f },
-		/*11*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{-1.0f, 0.0f, 0.0f },
-																						
-		/*12*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f },
-		/*13*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f },
-		/*14*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f },
-		/*15*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{1.0f, 0.0f, 0.0f },
-																															  
-		/*16*/	DirectX::XMFLOAT3{-0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f },
-		/*17*/	DirectX::XMFLOAT3{+0.5f, -0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f },
-		/*18*/	DirectX::XMFLOAT3{+0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f },
-		/*19*/	DirectX::XMFLOAT3{-0.5f, +0.5f, +0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, 1.0f },
-																						
-		/*20*/	DirectX::XMFLOAT3{-0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
-		/*21*/	DirectX::XMFLOAT3{+0.5f, -0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 0.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
-		/*22*/	DirectX::XMFLOAT3{+0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 1.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
-		/*23*/	DirectX::XMFLOAT3{-0.5f, +0.5f, -0.5f }, DirectX::XMFLOAT2{ 0.0f, 1.0f  }, DirectX::XMFLOAT3{0.0f, 0.0f, -1.0f},
+		/*0*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, -0.5f ), DirectX::XMFLOAT2( 0.0f, 0.0f  ), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f )),
+		/*1*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, -0.5f ), DirectX::XMFLOAT2( 1.0f, 0.0f  ), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f )),
+		/*2*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, +0.5f ), DirectX::XMFLOAT2( 1.0f, 1.0f  ), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f )),
+		/*3*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, +0.5f ), DirectX::XMFLOAT2( 0.0f, 1.0f  ), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f )),
+				
+		/*4*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, -0.5f ), DirectX::XMFLOAT2( 0.0f, 0.0f  ), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f  )),
+		/*5*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, -0.5f ), DirectX::XMFLOAT2( 1.0f, 0.0f  ), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f  )),
+		/*6*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, +0.5f ), DirectX::XMFLOAT2( 1.0f, 1.0f  ), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f  )),
+		/*7*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, +0.5f ), DirectX::XMFLOAT2( 0.0f, 1.0f  ), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f  )),
+			
+		/*8*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, -0.5f ), DirectX::XMFLOAT2( 0.0f, 0.0f  ), DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f )),
+		/*9*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, +0.5f ), DirectX::XMFLOAT2( 1.0f, 0.0f  ), DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f )),
+		/*10*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, +0.5f ), DirectX::XMFLOAT2( 1.0f, 1.0f  ), DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f )),
+		/*11*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, -0.5f ), DirectX::XMFLOAT2( 0.0f, 1.0f  ), DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f )),
+				
+		/*12*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, -0.5f ), DirectX::XMFLOAT2( 0.0f, 0.0f  ), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f  )),
+		/*13*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, +0.5f ), DirectX::XMFLOAT2( 1.0f, 0.0f  ), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f  )),
+		/*14*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, +0.5f ), DirectX::XMFLOAT2( 1.0f, 1.0f  ), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f  )),
+		/*15*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, -0.5f ), DirectX::XMFLOAT2( 0.0f, 1.0f  ), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f  )),
+				
+		/*16*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, +0.5f ), DirectX::XMFLOAT2( 0.0f, 0.0f  ), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f  )),
+		/*17*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, +0.5f ), DirectX::XMFLOAT2( 1.0f, 0.0f  ), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f  )),
+		/*18*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, +0.5f ), DirectX::XMFLOAT2( 1.0f, 1.0f  ), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f  )),
+		/*19*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, +0.5f ), DirectX::XMFLOAT2( 0.0f, 1.0f  ), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f  )),
+				
+		/*20*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, -0.5f ), DirectX::XMFLOAT2( 0.0f, 0.0f  ), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f )),
+		/*21*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, -0.5f ), DirectX::XMFLOAT2( 1.0f, 0.0f  ), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f )),
+		/*22*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, -0.5f ), DirectX::XMFLOAT2( 1.0f, 1.0f  ), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f )),
+		/*23*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, -0.5f ), DirectX::XMFLOAT2( 0.0f, 1.0f  ), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f )),
 	};
 	UINT indices[36]
 	{
@@ -173,50 +173,21 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 	};
 
-	// vertex buffer
-	D3D11_BUFFER_DESC vBufferDesc;
-	ZeroMemory(&vBufferDesc, sizeof(D3D11_BUFFER_DESC));
+	D3DUtil::Get().Upload(device, m_d3dVertexBuffer, BufferType::VERTEX_BUFFER, sizeof(Vertex) * std::size(vertices), (void*)(&vertices));
+	D3DUtil::Get().Upload(device, m_d3dIndexBuffer, BufferType::INDEX_BUFFER, sizeof(UINT) * ARRAYSIZE(indices), (void*)(&indices));
 
-	vBufferDesc.Usage = D3D11_USAGE_DYNAMIC;						// write access access by CPU and GPU
-	vBufferDesc.ByteWidth = sizeof(Vertex) * std::size(vertices);   // size is the VERTEX struct * 3
-	vBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;				// use as a vertex buffer
-	vBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;			// allow CPU to write in buffer
-
-	D3D11_SUBRESOURCE_DATA vSubResource;
-	ZeroMemory(&vSubResource, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	vSubResource.pSysMem = &vertices;
-
-	ThrowIfFailed(device->CreateBuffer(&vBufferDesc, &vSubResource, &m_d3dVertexBuffer));
-
-	// index buffer
-	D3D11_BUFFER_DESC iBufferDesc;
-	ZeroMemory(&iBufferDesc, sizeof(D3D11_BUFFER_DESC));
-
-	iBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-	iBufferDesc.ByteWidth = sizeof(UINT) * ARRAYSIZE(indices);
-	iBufferDesc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-	iBufferDesc.CPUAccessFlags = 0;
-
-	D3D11_SUBRESOURCE_DATA iSubResource;
-	ZeroMemory(&iSubResource, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	iSubResource.pSysMem = &indices;
-
-	ThrowIfFailed(device->CreateBuffer(&iBufferDesc, &iSubResource, &m_d3dIndexBuffer));
-
-	PSConstantBuffer.pointLights[0].Position = { 0.0f, 0.0f, 0.0f };
-	PSConstantBuffer.pointLights[0].Strength = { 16.0f, 16.0f, 16.0f };
-	PSConstantBuffer.pointLights[0].SpecularStrength = 1.0f;
-	PSConstantBuffer.pointLights[0].FallOffStart = 0.1f;
-	PSConstantBuffer.pointLights[0].FallOffEnd = 8.0f;
+	m_PSConstBuffer.pointLights[0].Position = { 0.0f, 0.0f, 0.0f };
+	m_PSConstBuffer.pointLights[0].Strength = { 12.0f, 12.0f, 12.0f };
+	m_PSConstBuffer.pointLights[0].SpecularStrength = 1.0f;
+	m_PSConstBuffer.pointLights[0].FallOffStart = 0.1f;
+	m_PSConstBuffer.pointLights[0].FallOffEnd = 8.0f;
 
 	Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
 		800.0f / 600.0f, // Screen aspect
 		0.1f,			// Minimum vocal distance
 		300.0f);		// Maximum vocal distance
 
-	VSConstantBuffer.Proj = DirectX::XMMatrixTranspose(Projection);
+	m_VSConstBuffer.Proj = DirectX::XMMatrixTranspose(Projection);
 }
 
 void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -229,11 +200,11 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 										DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
 										DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 
-	DirectX::XMStoreFloat4(&PSConstantBuffer.EyeWorldSpace, D3DUtil::Get().m_EyePos);
+	DirectX::XMStoreFloat4(&m_PSConstBuffer.EyeWorldSpace, D3DUtil::Get().m_EyePos);
 
 	rotAxis = DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f);
 
-	VSConstantBuffer.View = DirectX::XMMatrixTranspose(View);
+	m_VSConstBuffer.View = DirectX::XMMatrixTranspose(View);
 }
 
 void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -242,8 +213,8 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	UINT stride = sizeof(Vertex);
 	
 	// bind vertex/index buffers, and set our primitive type
-	deviceContext->IASetVertexBuffers(0, 1, &m_d3dVertexBuffer, &stride, &offset);
-	deviceContext->IASetIndexBuffer(m_d3dIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	deviceContext->IASetVertexBuffers(0, 1, m_d3dVertexBuffer.GetAddressOf(), &stride, &offset);
+	deviceContext->IASetIndexBuffer(m_d3dIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// set our texture sampler state and texture itself to be active on the pipeline
@@ -252,16 +223,16 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	DirectX::XMFLOAT3 cubeTranslate[10] = 
 	{
-		DirectX::XMFLOAT3({2.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({-2.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({4.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({-4.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({6.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({-6.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({8.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({-8.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({10.0f, 0.0f, 0.0f}),
-		DirectX::XMFLOAT3({-10.0f, 0.0f, 0.0f}),
+		{ +2.0f, 0.0f, 0.0f },
+		{ -2.0f, 0.0f, 0.0f },
+		{ +4.0f, 0.0f, 0.0f },
+		{ -4.0f, 0.0f, 0.0f },
+		{ +6.0f, 0.0f, 0.0f },
+		{ -6.0f, 0.0f, 0.0f },
+		{ +8.0f, 0.0f, 0.0f },
+		{ -8.0f, 0.0f, 0.0f },
+		{ +10.0f, 0.0f, 0.0f },
+		{ -10.0f, 0.0f, 0.0f },
 	};
 
 	for (int i = 0; i < ARRAYSIZE(cubeTranslate); i++)
@@ -273,10 +244,10 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 			DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
 
 		// Global transform matrix
-		VSConstantBuffer.World = DirectX::XMMatrixTranspose(Model * View * Projection);
+		m_VSConstBuffer.World = DirectX::XMMatrixTranspose(Model * View * Projection);
 		
 		// Local transform matrix
-		VSConstantBuffer.Model = DirectX::XMMatrixTranspose(Model);
+		m_VSConstBuffer.Model = DirectX::XMMatrixTranspose(Model);
 
 		// update our model and world matrix so we can translate this object!
 		UpdateConstants(device, deviceContext);
@@ -291,61 +262,27 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 void Graphics::UpdateConstants(ID3D11Device * device, ID3D11DeviceContext * deviceContext)
 {
 	if (m_d3dVSConstantBuffer != nullptr)
-		m_d3dVSConstantBuffer->Release();
+		m_d3dVSConstantBuffer.Reset();
 
 	if (m_d3dPSConstantBuffer != nullptr)
-		m_d3dPSConstantBuffer->Release();
-	// Update constant buffer in the vertex shader
-	// -----------------------------------------------------------------
-	D3D11_BUFFER_DESC c_vs_BufferDesc;
-	ZeroMemory(&c_vs_BufferDesc, sizeof(D3D11_BUFFER_DESC));
+		m_d3dPSConstantBuffer.Reset();
 
-	c_vs_BufferDesc.ByteWidth = sizeof(D3D11_VS_CONSTANT_BUFFER);
-	c_vs_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	c_vs_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	c_vs_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	D3D11_SUBRESOURCE_DATA c_vs_SubResource;
-	ZeroMemory(&c_vs_SubResource, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	c_vs_SubResource.pSysMem = &VSConstantBuffer;
-
-	ThrowIfFailed(device->CreateBuffer(&c_vs_BufferDesc, &c_vs_SubResource, &m_d3dVSConstantBuffer));
-	deviceContext->VSSetConstantBuffers(0, 1, &m_d3dVSConstantBuffer);
-
-	// Update constant buffer in the pixel shader
-	// -----------------------------------------------------------------
-	D3D11_BUFFER_DESC c_ps_BufferDesc;
-	ZeroMemory(&c_ps_BufferDesc, sizeof(D3D11_BUFFER_DESC));
-
-	c_ps_BufferDesc.ByteWidth = sizeof(D3D11_PS_CONSTANT_BUFFER);
-	c_ps_BufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-	c_ps_BufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	c_ps_BufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-	D3D11_SUBRESOURCE_DATA c_ps_SubResource;
-	ZeroMemory(&c_ps_SubResource, sizeof(D3D11_SUBRESOURCE_DATA));
-
-	c_ps_SubResource.pSysMem = &PSConstantBuffer;
-
-	ThrowIfFailed(device->CreateBuffer(&c_ps_BufferDesc, &c_ps_SubResource, &m_d3dPSConstantBuffer));
-	deviceContext->PSSetConstantBuffers(0, 1, &m_d3dPSConstantBuffer);
-	// -----------------------------------------------------------------
+	m_VSConstBuffer.Upload(device, deviceContext, m_d3dVSConstantBuffer, Shader::VS, sizeof(D3D11_VS_CONSTANT_BUFFER), (void*)(&m_VSConstBuffer));
+	m_PSConstBuffer.Upload(device, deviceContext, m_d3dPSConstantBuffer, Shader::PS, sizeof(D3D11_PS_CONSTANT_BUFFER), (void*)(&m_PSConstBuffer));
 }
-
 
 void Graphics::Clean()
 {
 	brick_shaderResource->Release();
 	m_d3dSamplerState->Release();
-
-	m_d3dVertexBuffer->Release();
-	m_d3dIndexBuffer->Release();
+	
+	m_d3dVertexBuffer.Reset();
+	m_d3dIndexBuffer.Reset();
 	
 	m_d3dInputLayout->Release();
 	m_d3dVertexShader->Release();
 	m_d3dPixelShader->Release();
 	
-	m_d3dVSConstantBuffer->Release();
-	m_d3dPSConstantBuffer->Release();
+	m_d3dVSConstantBuffer.Reset();
+	m_d3dPSConstantBuffer.Reset();
 }

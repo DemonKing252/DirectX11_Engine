@@ -99,7 +99,7 @@ void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
 
 void D3D11Application::ClearRenderTargetView()
 {
-	FLOAT clear_color[] = { 15.0f /255.0f, 29.0f /255.0f, 70.0f /255.0f, 1.0f };
+	FLOAT clear_color[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 
 	m_d3dDeviceContext->ClearRenderTargetView(m_d3dBackBuffer, clear_color);
 }

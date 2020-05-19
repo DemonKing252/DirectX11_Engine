@@ -20,19 +20,25 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="D3DCommon.cpp" />
     <ClCompile Include="D3D11Application.cpp" />
+    <ClCompile Include="D3DUtil.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="MathUtil.cpp" />
+    <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="D3DMain.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="D3DCommon.h" />
     <ClInclude Include="D3D11Application.h" />
+    <ClInclude Include="D3DUtil.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="MathUtil.h" />
+    <ClInclude Include="Vertex.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>

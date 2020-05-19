@@ -4,6 +4,7 @@
 #include <DirectXMath.h>
 #include <string>
 #include "D3DCommon.h"
+#include "D3DUtil.h"
 #include "MathUtil.h"
 
 class Camera;
