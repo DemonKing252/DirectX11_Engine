@@ -18,6 +18,7 @@ public:
 
 	void CreateWin32Window(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow);
 	void MessageLoop(MSG msg);
+	void Clean();
 
 	BOOL RegisterWinClass();
 	HWND GetWindow()const;
@@ -30,6 +31,8 @@ private:
 	HWND m_hwnd;
 	WNDCLASS m_windowClass;
 	LPCSTR m_windowClassName;
+	HINSTANCE m_hInstance;
+
 	DirectX::XMFLOAT2 windowSize;
 	std::shared_ptr<Camera> m_pCamera;
 } Window, HWND32;

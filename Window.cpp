@@ -30,6 +30,7 @@ Window::Window(const LPCSTR className, const HINSTANCE hInstance, std::shared_pt
 {
 	m_bQuitMessagePosted = false;
 
+	this->m_hInstance = hInstance;
 	this->m_pCamera = camera;
 	// Step1: create a window class
 	ZeroMemory(&m_windowClass, sizeof(WNDCLASS));
@@ -78,6 +79,8 @@ void Window::CreateWin32Window(const LPCSTR windowTitleName, const INT x, const 
 	);
 
 	ShowWindow(m_hwnd, mCmdShow);
+	SetForegroundWindow(m_hwnd);
+	SetFocus(m_hwnd);
 }	
 
 BOOL Window::RegisterWinClass()
@@ -191,4 +194,10 @@ void Window::MessageLoop(MSG msg)
 		}
 	}	
 	
+}
+
+void Window::Clean()
+{
+	UnregisterClass(m_windowClassName, m_hInstance);
+	DestroyWindow(m_hwnd);
 }

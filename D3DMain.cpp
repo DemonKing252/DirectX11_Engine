@@ -44,6 +44,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine
 			
 			D3D11Engine::Get().PresentSwapChain();
 		}
+		window->Clean();
 		D3D11Engine::Get().Clean();
 	}
 	return 0;

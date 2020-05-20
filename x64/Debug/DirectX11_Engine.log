@@ -1,3 +1,21 @@
-﻿  Graphics.cpp
+﻿  D3D11Application.cpp
+c:\users\owner\source\repos\directx11_engine\directx11_engine\d3d11application.cpp(12): warning C4244: '=': conversion from 'float' to 'UINT', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\d3d11application.cpp(13): warning C4244: '=': conversion from 'float' to 'UINT', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\d3d11application.cpp(42): warning C4244: '=': conversion from 'float' to 'UINT', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\d3d11application.cpp(43): warning C4244: '=': conversion from 'float' to 'UINT', possible loss of data
+  D3DMain.cpp
+  Graphics.cpp
 c:\users\owner\source\repos\directx11_engine\directx11_engine\graphics.cpp(177): warning C4267: 'argument': conversion from 'size_t' to 'UINT', possible loss of data
+  Window.cpp
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(50): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(70): warning C4244: 'argument': conversion from 'const INT' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(157): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(158): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(159): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(185): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(186): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\owner\source\repos\directx11_engine\directx11_engine\window.cpp(187): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+  Generating Code...
   DirectX11_Engine.vcxproj -> C:\Users\Owner\source\repos\DirectX11_Engine\x64\Debug\DirectX11_Engine.exe
