@@ -53,7 +53,7 @@ float3 ComputePointLight(PointLight light, PSLayout layout, float attenuation)
 }
 float4 PSMain(PSLayout layout) : SV_TARGET
 {
-	const float3 ambientLight = float3(0.3f, 0.3f, 0.3f);
+	const float3 ambientLight = float3(0.5f, 0.5f, 0.5f);
 
 	float3 totalLight = float3(0, 0, 0);
 

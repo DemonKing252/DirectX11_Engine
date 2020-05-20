@@ -9,11 +9,11 @@ Graphics::Graphics()
 	ZeroMemory(m_d3dPSConstantBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
 	ZeroMemory(m_d3dVertexBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
 	ZeroMemory(m_d3dIndexBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
-	ZeroMemory(&m_d3dVertexShader, sizeof(ID3D11VertexShader));
-	ZeroMemory(&m_d3dPixelShader, sizeof(ID3D11PixelShader));
-	ZeroMemory(&m_d3dInputLayout, sizeof(ID3D11InputLayout));
-	ZeroMemory(&brick_shaderResource, sizeof(ID3D11ShaderResourceView));
-	ZeroMemory(&m_d3dSamplerState, sizeof(ID3D11SamplerState));
+	ZeroMemory(m_d3dVertexShader.GetAddressOf(), sizeof(ID3D11VertexShader));
+	ZeroMemory(m_d3dPixelShader.GetAddressOf(), sizeof(ID3D11PixelShader));
+	ZeroMemory(m_d3dInputLayout.GetAddressOf(), sizeof(ID3D11InputLayout));
+	ZeroMemory(fence_shaderResource.GetAddressOf(), sizeof(ID3D11ShaderResourceView));
+	ZeroMemory(m_d3dSamplerState.GetAddressOf(), sizeof(ID3D11SamplerState));
 }
 
 Graphics::~Graphics()
@@ -65,8 +65,8 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	ThrowIfFailed(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), NULL, &m_d3dVertexShader));
 	ThrowIfFailed(device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), NULL, &m_d3dPixelShader));
 
-	deviceContext->VSSetShader(m_d3dVertexShader, 0, 0);
-	deviceContext->PSSetShader(m_d3dPixelShader, 0, 0);
+	deviceContext->VSSetShader(m_d3dVertexShader.Get(), 0, 0);
+	deviceContext->PSSetShader(m_d3dPixelShader.Get(), 0, 0);
 
 	// Our layout is 20 bytes in total. Multiply that by 8 and we get our TOTAL
 	// size of our vertex buffer which is 160 bytes (0.16 MB)
@@ -85,10 +85,11 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
 
-	ThrowIfFailed(device->CreateInputLayout(inputLayout, ARRAYSIZE(inputLayout), vs->GetBufferPointer(), vs->GetBufferSize(), &m_d3dInputLayout));
-	deviceContext->IASetInputLayout(m_d3dInputLayout);
+	ThrowIfFailed(device->CreateInputLayout(inputLayout, ARRAYSIZE(inputLayout), vs->GetBufferPointer(), vs->GetBufferSize(), m_d3dInputLayout.GetAddressOf()));
+	deviceContext->IASetInputLayout(m_d3dInputLayout.Get());
 
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, &brick_shaderResource));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/Fence.png", nullptr, fence_shaderResource.GetAddressOf()));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, redstoneLamp_shaderResource.GetAddressOf()));
 
 	// what is a texture filter?
 	// read:
@@ -177,7 +178,7 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	D3DUtil::Get().Upload(device, m_d3dIndexBuffer, BufferType::INDEX_BUFFER, sizeof(UINT) * ARRAYSIZE(indices), (void*)(&indices));
 
 	m_PSConstBuffer.pointLights[0].Position = { 0.0f, 0.0f, 0.0f };
-	m_PSConstBuffer.pointLights[0].Strength = { 12.0f, 12.0f, 12.0f };
+	m_PSConstBuffer.pointLights[0].Strength = { 16.0f, 16.0f, 16.0f };
 	m_PSConstBuffer.pointLights[0].SpecularStrength = 1.0f;
 	m_PSConstBuffer.pointLights[0].FallOffStart = 0.1f;
 	m_PSConstBuffer.pointLights[0].FallOffEnd = 8.0f;
@@ -188,6 +189,31 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		300.0f);		// Maximum vocal distance
 
 	m_VSConstBuffer.Proj = DirectX::XMMatrixTranspose(Projection);
+
+	D3D11_BLEND_DESC blendStateDesc;
+	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+
+	blendStateDesc.RenderTarget[0].BlendEnable = TRUE;
+	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	
+	blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	
+	blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+
+	ThrowIfFailed(device->CreateBlendState(&blendStateDesc, m_d3dBlendState.GetAddressOf()));
+	float blendFactor[4];
+
+	blendFactor[0] = 0.0f;
+	blendFactor[1] = 0.0f;
+	blendFactor[2] = 0.0f;
+	blendFactor[3] = 0.0f;
+		
+	deviceContext->OMSetBlendState(this->m_d3dBlendState.Get(), blendFactor, 0xffffffff);
+
 }
 
 void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
@@ -211,16 +237,14 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
 	UINT offset = 0;
 	UINT stride = sizeof(Vertex);
-	
+
 	// bind vertex/index buffers, and set our primitive type
 	deviceContext->IASetVertexBuffers(0, 1, m_d3dVertexBuffer.GetAddressOf(), &stride, &offset);
 	deviceContext->IASetIndexBuffer(m_d3dIndexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// set our texture sampler state and texture itself to be active on the pipeline
-	deviceContext->PSSetSamplers(0, 1, &m_d3dSamplerState);
-	deviceContext->PSSetShaderResources(0, 1, &brick_shaderResource);
-
+	deviceContext->PSSetSamplers(0, 1, m_d3dSamplerState.GetAddressOf());
 	DirectX::XMFLOAT3 cubeTranslate[10] = 
 	{
 		{ +2.0f, 0.0f, 0.0f },
@@ -237,25 +261,35 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	for (int i = 0; i < ARRAYSIZE(cubeTranslate); i++)
 	{
-		Model = DirectX::XMMatrixIdentity();
-		Model =
-			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
-			DirectX::XMMatrixRotationAxis(rotAxis, mCntr) *		// Rotate
-			DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
+		deviceContext->PSSetShaderResources(0, 1, redstoneLamp_shaderResource.GetAddressOf());
+		{
+			Model = DirectX::XMMatrixIdentity();
+			Model =
+				DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+				DirectX::XMMatrixRotationAxis(rotAxis, mCntr) *		// Rotate
+				DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
 
-		// Global transform matrix
-		m_VSConstBuffer.World = DirectX::XMMatrixTranspose(Model * View * Projection);
-		
-		// Local transform matrix
-		m_VSConstBuffer.Model = DirectX::XMMatrixTranspose(Model);
+			m_VSConstBuffer.World = DirectX::XMMatrixTranspose(Model * View * Projection);
+			m_VSConstBuffer.Model = DirectX::XMMatrixTranspose(Model);
+			UpdateConstants(device, deviceContext);
 
-		// update our model and world matrix so we can translate this object!
-		UpdateConstants(device, deviceContext);
+			deviceContext->DrawIndexed(36, 0, 0);
+		}
+		deviceContext->PSSetShaderResources(0, 1, fence_shaderResource.GetAddressOf());
+		{
+			Model = DirectX::XMMatrixIdentity();
+			Model =
+				DirectX::XMMatrixScaling(1.2f, 1.2f, 1.2f) *	// Scale
+				DirectX::XMMatrixRotationAxis(rotAxis, mCntr) *		// Rotate
+				DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
 
-		/* Drawing with devCon->Draw() will draw vertices in seqential order using the vertex buffer only */
+			// Global transform matrix
+			m_VSConstBuffer.World = DirectX::XMMatrixTranspose(Model * View * Projection);
+			m_VSConstBuffer.Model = DirectX::XMMatrixTranspose(Model);
+			UpdateConstants(device, deviceContext);
 
-		// draw call with our index buffer
-		deviceContext->DrawIndexed(36, 0, 0);
+			deviceContext->DrawIndexed(36, 0, 0);
+		}
 	}
 }
 
@@ -273,15 +307,15 @@ void Graphics::UpdateConstants(ID3D11Device * device, ID3D11DeviceContext * devi
 
 void Graphics::Clean()
 {
-	brick_shaderResource->Release();
-	m_d3dSamplerState->Release();
+	fence_shaderResource.Reset();
+	m_d3dSamplerState.Reset();
 	
 	m_d3dVertexBuffer.Reset();
 	m_d3dIndexBuffer.Reset();
 	
-	m_d3dInputLayout->Release();
-	m_d3dVertexShader->Release();
-	m_d3dPixelShader->Release();
+	m_d3dInputLayout.Reset();
+	m_d3dVertexShader.Reset();
+	m_d3dPixelShader.Reset();
 	
 	m_d3dVSConstantBuffer.Reset();
 	m_d3dPSConstantBuffer.Reset();

@@ -61,7 +61,7 @@ void D3D11Application::InitDepthAndStencilView(std::shared_ptr<Window> window) c
 	depthStencilDesc.Format = depthDesc.Format;
 	depthStencilDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
 
-	ThrowIfFailed(m_d3dDevice->CreateDepthStencilView(depthStencilTexture, NULL, &m_d3dDepthStencilView));
+	ThrowIfFailed(m_d3dDevice->CreateDepthStencilView(depthStencilTexture, NULL, m_d3dDepthStencilView.GetAddressOf()));
 	depthStencilTexture->Release();
 }
 
@@ -74,11 +74,11 @@ void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
 	m_d3dSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&pBackBuffer));
 
 	// create a render target using the back buffer
-	ThrowIfFailed(m_d3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &m_d3dBackBuffer));
+	ThrowIfFailed(m_d3dDevice->CreateRenderTargetView(pBackBuffer, NULL, m_d3dBackBuffer.GetAddressOf()));
 	pBackBuffer->Release();
 
 	// set the render target as the back buffer
-	m_d3dDeviceContext->OMSetRenderTargets(1, &m_d3dBackBuffer, m_d3dDepthStencilView);
+	m_d3dDeviceContext->OMSetRenderTargets(1, m_d3dBackBuffer.GetAddressOf(), m_d3dDepthStencilView.Get());
 
 	D3D11_VIEWPORT viewport;
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
@@ -92,31 +92,30 @@ void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
 
 	m_d3dDeviceContext->RSSetViewports(1, &viewport);
 
-	gfx.InitPipeline(m_d3dDevice, m_d3dDeviceContext);
-	gfx.InitGraphics(m_d3dDevice, m_d3dDeviceContext);
-
+	gfx.InitPipeline(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
+	gfx.InitGraphics(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
 }
 
 void D3D11Application::ClearRenderTargetView()
 {
 	FLOAT clear_color[] = { 0.0f, 0.0f, 0.2f, 1.0f };
 
-	m_d3dDeviceContext->ClearRenderTargetView(m_d3dBackBuffer, clear_color);
+	m_d3dDeviceContext->ClearRenderTargetView(m_d3dBackBuffer.Get(), clear_color);
 }
 
 void D3D11Application::ClearDepthAndStencilView()
 {
-	m_d3dDeviceContext->ClearDepthStencilView(m_d3dDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	m_d3dDeviceContext->ClearDepthStencilView(m_d3dDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void D3D11Application::Update()
 {
-	gfx.Update(m_d3dDevice, m_d3dDeviceContext);
+	gfx.Update(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
 }
 
 void D3D11Application::Draw()
 {
-	gfx.Draw(m_d3dDevice, m_d3dDeviceContext);
+	gfx.Draw(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
 }
 
 void D3D11Application::PresentSwapChain()
@@ -128,11 +127,11 @@ void D3D11Application::Clean()
 {
 	gfx.Clean();
 	
-	m_d3dDepthStencilView->Release();
-	m_d3dDevice->Release();
-	m_d3dDeviceContext->Release();
-	m_d3dBackBuffer->Release();
-	m_d3dSwapChain->Release();
+	m_d3dDepthStencilView.Reset();
+	m_d3dDevice.Reset();
+	m_d3dDeviceContext.Reset();
+	m_d3dBackBuffer.Reset();
+	m_d3dSwapChain.Reset();
 }
 
 D3D11Application::~D3D11Application()

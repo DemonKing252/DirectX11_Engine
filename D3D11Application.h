@@ -33,16 +33,14 @@ public:
 private:
 	static D3D11Application s_Instance;
 	mutable Graphics gfx;
-
 	// Main device adapters 
-	mutable IDXGISwapChain* m_d3dSwapChain;
-	mutable ID3D11Device* m_d3dDevice;
-	mutable ID3D11DeviceContext* m_d3dDeviceContext;
-	mutable ID3D11RenderTargetView* m_d3dBackBuffer;
+	mutable Microsoft::WRL::ComPtr<IDXGISwapChain> m_d3dSwapChain;
+	mutable Microsoft::WRL::ComPtr<ID3D11Device> m_d3dDevice;
+	mutable Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_d3dDeviceContext;
+	mutable Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_d3dBackBuffer;
 
-	// Keyboard and mouse
-
+	
 	// Depth and Stencil
-	mutable ID3D11DepthStencilView* m_d3dDepthStencilView;
+	mutable Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_d3dDepthStencilView;
 	
 } D3D11Application, D3D11App, D3D11Engine;

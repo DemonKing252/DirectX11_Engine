@@ -31,8 +31,8 @@ private:
 	float mCntr = 0.0f;
 
 	// shader info
-	ID3D11VertexShader* m_d3dVertexShader;
-	ID3D11PixelShader* m_d3dPixelShader;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_d3dVertexShader;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShader;
 
 	// buffers
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dVertexBuffer;
@@ -41,13 +41,16 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dPSConstantBuffer;
 
 	// input layout and constant buffer instance
-	ID3D11InputLayout* m_d3dInputLayout;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_d3dInputLayout;
 
 	D3D11_VS_CONSTANT_BUFFER m_VSConstBuffer;
 	D3D11_PS_CONSTANT_BUFFER m_PSConstBuffer;
 	// texturing
-	ID3D11ShaderResourceView* brick_shaderResource;
-	ID3D11SamplerState* m_d3dSamplerState;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fence_shaderResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> redstoneLamp_shaderResource;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_d3dSamplerState;
+
+	Microsoft::WRL::ComPtr <ID3D11BlendState> m_d3dBlendState;
 	
 	DirectX::XMMATRIX Model;
 	DirectX::XMMATRIX View;

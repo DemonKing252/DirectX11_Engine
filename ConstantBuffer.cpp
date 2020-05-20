@@ -1,7 +1,6 @@
 #include "ConstantBuffer.h"
 void D3DUploadBuffer::Upload(ID3D11Device* device, ID3D11DeviceContext* deviceContext, Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer, Shader shader, UINT byteSize, void* data)
 {
-
 	D3D11_BUFFER_DESC g_BufferDesc;
 	ZeroMemory(&g_BufferDesc, sizeof(D3D11_BUFFER_DESC));
 
