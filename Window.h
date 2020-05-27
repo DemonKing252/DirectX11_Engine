@@ -6,7 +6,6 @@
 #include "D3DCommon.h"
 #include "D3DUtil.h"
 #include "MathUtil.h"
-
 class Camera;
 class Window;
 typedef class Window
@@ -16,15 +15,15 @@ public:
 	Window(const LPCSTR className, const HINSTANCE hInstance, std::shared_ptr<Camera> camera);
 	~Window();
 
-	void CreateWin32Window(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow);
+	void Create(const LPCSTR windowTitleName, const INT x, const INT y, const INT w, const INT h, const HINSTANCE hInstance, const INT mCmdShow);
 	void MessageLoop(MSG msg);
 	void Clean();
 
-	BOOL RegisterWinClass();
+	BOOL Register();
 	HWND GetWindow()const;
 	
 	std::shared_ptr<Camera> GetCamera();
-	DirectX::XMFLOAT2 getWindowSize() const;
+	DirectX::XMFLOAT2 GetWindowSize() const;
 
 	BOOL m_bQuitMessagePosted;
 private:

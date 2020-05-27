@@ -1,12 +1,15 @@
 #pragma once
 #include "D3DCommon.h"
 #include "Graphics.h"
+// Remove rough edges off sides of geometry. Sometimes called the "stair case effect".
+#define ANTI_ALIASING_SAMPLE_COUNT 4
+#define ANTI_ALIASING_QUALITY_COUNT 0
 class Window;
 
 typedef class D3D11Application
 {
 public:
-	D3D11Application(D3D11Application* other) = delete;
+	D3D11Application(D3D11Application* copy) = delete;
 
 	// Initalizing D3D
 	void InitDeviceAndSwapChain(std::shared_ptr<Window> window)const;
@@ -18,7 +21,7 @@ public:
 	void ClearDepthAndStencilView();
 	void Update();
 	void Draw();
-	void PresentSwapChain();
+	void EndFrame();
 
 	void Clean();
 
@@ -29,6 +32,8 @@ public:
 	{
 		return s_Instance;
 	}
+
+	mutable FLOAT clear_color[4];
 
 private:
 	static D3D11Application s_Instance;

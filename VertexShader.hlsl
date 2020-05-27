@@ -21,7 +21,7 @@ VSLayout VSMain(float3 position : POSITION, float2 texCoord : TEXCOORD, float3 n
 	layout.position = mul(float4(position, 1.0f), World);
 	layout.texCoord = texCoord;
 	layout.normal = mul(normal, (float3x3) Model);
-	layout.fragPos = (float3)mul(float4(position, 1.0f), Model);
+	layout.fragPos = mul(float4(position, 1.0f), Model).xyz;
 
 	return layout;
 }

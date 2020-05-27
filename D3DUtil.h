@@ -6,6 +6,7 @@
 
 enum BufferType { VERTEX_BUFFER, INDEX_BUFFER, CONSTANT_BUFFER };
 enum Shader { VS, PS };
+enum Color { R, G, B, A };
 
 class D3DUtil
 {

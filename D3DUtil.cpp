@@ -8,7 +8,6 @@ std::string D3DUtil::HrToString(HRESULT hr) const
 }
 void D3DUtil::Upload(ID3D11Device* device, Microsoft::WRL::ComPtr<ID3D11Buffer>& buffer, BufferType bufferType, UINT byteSize, void* data)
 {
-
 	D3D11_BUFFER_DESC g_BufferDesc;
 	ZeroMemory(&g_BufferDesc, sizeof(D3D11_BUFFER_DESC));
 	switch (bufferType)

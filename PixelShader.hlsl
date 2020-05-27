@@ -19,7 +19,9 @@ struct PointLight
 cbuffer PSConstantBuffer : register(b0)
 {
 	float4 EyeWorldSpace;		// Eye Position (World Space)
-	PointLight light[MaxLights];
+    
+    PointLight light[MaxLights];
+    
 }
 
 
@@ -53,7 +55,7 @@ float3 ComputePointLight(PointLight light, PSLayout layout, float attenuation)
 }
 float4 PSMain(PSLayout layout) : SV_TARGET
 {
-	const float3 ambientLight = float3(0.5f, 0.5f, 0.5f);
+	const float3 ambientLight = float3(0.2f, 0.2f, 0.2f);
 
 	float3 totalLight = float3(0, 0, 0);
 
@@ -62,13 +64,12 @@ float4 PSMain(PSLayout layout) : SV_TARGET
 	for (int i = 0; i < MaxLights; i++)
 	{
 		float attenuation = length(light[i].Position.xyz - layout.fragPos);
+        
 		if (attenuation <= light[i].FallOffEnd)
-		{
 			totalLight += ComputePointLight(light[i], layout, attenuation);
-		}
 	}
 	totalLight += ambientLight;
 
 	// Sampler state (texture) multiplied by the total light that we calculated
-	return (g_sampleColor * float4(totalLight, 1.0f));
+    return (g_sampleColor * float4(totalLight, 1.0f));
 }

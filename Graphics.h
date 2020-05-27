@@ -8,21 +8,33 @@
 #include <memory>
 #include "Window.h"
 #include "D3DUtil.h"
-#include "ConstantBuffer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+// ImGui for DirectX11
+#include "ImGui/imgui_impl_dx11.h"
+#include "ImGui/imgui_impl_win32.h"
+#include "ImGui/imgui.h"
+
 // DirectX Libraries 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dcompiler.lib")
 #pragma comment(lib, "DirectXTK.lib")
+
+class D3DUploadBuffer;
+class PSConstBuffer;
+class VSConstBuffer;
+
 typedef class Graphics
 {
 public:
 	// Delete the copy constructor. Only one instance of graphics should be created!
-	Graphics(Graphics* other) = delete;
+	Graphics(Graphics* copy) = delete;
 	Graphics();
 	~Graphics();
 
 	void InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 	void InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
+	void InitImGui(ID3D11Device* device, ID3D11DeviceContext* deviceContext, std::shared_ptr<Window> window);
 	void Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 	void Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 	void UpdateConstants(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
@@ -35,26 +47,28 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShader;
 
 	// buffers
-	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dVertexBuffer;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dIndexBuffer;
+	std::shared_ptr<VertexBuffer<Vertex>> m_vertexBuffer;
+	std::shared_ptr<IndexBuffer<UINT>> m_indexBuffer;
+
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dVSConstantBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dPSConstantBuffer;
 
 	// input layout and constant buffer instance
 	Microsoft::WRL::ComPtr<ID3D11InputLayout> m_d3dInputLayout;
 
-	D3D11_VS_CONSTANT_BUFFER m_VSConstBuffer;
-	D3D11_PS_CONSTANT_BUFFER m_PSConstBuffer;
+	VSConstBuffer* m_VSConstBuffer;
+	PSConstBuffer* m_PSConstBuffer;
+	
 	// texturing
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fence_shaderResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> redstoneLamp_shaderResource;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_d3dSamplerState;
 
-	Microsoft::WRL::ComPtr <ID3D11BlendState> m_d3dBlendState;
+	// blending
+	Microsoft::WRL::ComPtr<ID3D11BlendState> m_d3dBlendState;
 	
-	DirectX::XMMATRIX Model;
-	DirectX::XMMATRIX View;
-	DirectX::XMMATRIX Projection;
+	DirectX::XMMATRIX m_4x4Model;
+	DirectX::XMMATRIX m_4x4View;
+	DirectX::XMMATRIX m_4x4Projection;
 
-	DirectX::XMVECTOR rotAxis;
 } Graphics, GFX;

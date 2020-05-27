@@ -4,26 +4,30 @@ D3D11Application D3D11Application::s_Instance = D3D11Application();
 
 void D3D11Application::InitDeviceAndSwapChain(std::shared_ptr<Window> window) const
 {
+	/* DirectX 11 swap chain infrastructure  */
+	// Step6: Create a swap chain to manage presenting the front and back buffers
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
 	ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
 
 	swapChainDesc.BufferCount = 1;
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-	swapChainDesc.BufferDesc.Width  = window->getWindowSize().x;
-	swapChainDesc.BufferDesc.Height = window->getWindowSize().y;
+	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.OutputWindow = window->GetWindow();
-	swapChainDesc.SampleDesc.Count = 4;
-	swapChainDesc.SampleDesc.Quality = 0;
+	swapChainDesc.BufferDesc.Width = window->GetWindowSize().x;
+	swapChainDesc.BufferDesc.Height = window->GetWindowSize().y;
 	swapChainDesc.Windowed = TRUE;
-	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
+	swapChainDesc.SampleDesc.Count = ANTI_ALIASING_SAMPLE_COUNT;
+	swapChainDesc.SampleDesc.Quality = ANTI_ALIASING_QUALITY_COUNT;
+
 	
+	// Step7: Create our device, device context, and swap chain
 	ThrowIfFailed(D3D11CreateDeviceAndSwapChain
 	(
 		NULL,
 		D3D_DRIVER_TYPE_HARDWARE,
 		NULL,
-		D3D11_CREATE_DEVICE_DEBUG,
+		D3D11_CREATE_DEVICE_DEBUG, // you can turn off debug erros by just passing NULL.
 		NULL,
 		NULL,
 		D3D11_SDK_VERSION,
@@ -39,13 +43,13 @@ void D3D11Application::InitDepthAndStencilView(std::shared_ptr<Window> window) c
 {
 	D3D11_TEXTURE2D_DESC depthDesc;
 	ZeroMemory(&depthDesc, sizeof(D3D11_TEXTURE2D_DESC));
-	depthDesc.Width =  window->getWindowSize().x;
-	depthDesc.Height = window->getWindowSize().y;
+	depthDesc.Width = window->GetWindowSize().x;
+	depthDesc.Height = window->GetWindowSize().y;
 	depthDesc.MipLevels = 1;
 	depthDesc.ArraySize = 1;
 	depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthDesc.SampleDesc.Count = 4;			// must match up with swap chain desc
-	depthDesc.SampleDesc.Quality = 0;		// must match up with swap chain desc
+	depthDesc.SampleDesc.Count = ANTI_ALIASING_SAMPLE_COUNT;	// must match up with swap chain desc
+	depthDesc.SampleDesc.Quality = ANTI_ALIASING_QUALITY_COUNT;	// must match up with swap chain desc
 	depthDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
 	depthDesc.CPUAccessFlags = 0;
@@ -67,6 +71,7 @@ void D3D11Application::InitDepthAndStencilView(std::shared_ptr<Window> window) c
 
 void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
 { 
+	// Step8: Get the back buffer address in the swap chain and set it as the render target
 	ID3D11Texture2D* pBackBuffer;
 	ZeroMemory(&pBackBuffer, sizeof(ID3D11Texture2D));
 
@@ -80,32 +85,51 @@ void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
 	// set the render target as the back buffer
 	m_d3dDeviceContext->OMSetRenderTargets(1, m_d3dBackBuffer.GetAddressOf(), m_d3dDepthStencilView.Get());
 
+	// Step9: View port for drawing 
+	// setting our desired viewport for our render target.
 	D3D11_VIEWPORT viewport;
 	ZeroMemory(&viewport, sizeof(D3D11_VIEWPORT));
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = window->getWindowSize().x;
-	viewport.Height = window->getWindowSize().y;
+	viewport.Width = window->GetWindowSize().x;
+	viewport.Height = window->GetWindowSize().y;
 	viewport.MinDepth = 0;
 	viewport.MaxDepth = 1;
 
 	m_d3dDeviceContext->RSSetViewports(1, &viewport);
+	
+	clear_color[Color::R] = 0.0f;
+	clear_color[Color::G] = 0.0f;
+	clear_color[Color::B] = 0.2f;
+	clear_color[Color::A] = 1.0f;
+
 
 	gfx.InitPipeline(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
 	gfx.InitGraphics(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
+	gfx.InitImGui(m_d3dDevice.Get(), m_d3dDeviceContext.Get(), window);
 }
 
 void D3D11Application::ClearRenderTargetView()
 {
-	FLOAT clear_color[] = { 0.0f, 0.0f, 0.2f, 1.0f };
-
-	m_d3dDeviceContext->ClearRenderTargetView(m_d3dBackBuffer.Get(), clear_color);
+	
+	// Step10: Clear the render target
+	// clearing the back buffer and filling it with a background color
+	m_d3dDeviceContext->ClearRenderTargetView(
+		m_d3dBackBuffer.Get(), 
+		clear_color
+	);
 }
 
 void D3D11Application::ClearDepthAndStencilView()
 {
-	m_d3dDeviceContext->ClearDepthStencilView(m_d3dDepthStencilView.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	// clear depth and stencil buffers (only depth matters at this point)
+	m_d3dDeviceContext->ClearDepthStencilView(
+		m_d3dDepthStencilView.Get(),
+		D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL,
+		1.0f,
+		0
+	);
 }
 
 void D3D11Application::Update()
@@ -118,8 +142,9 @@ void D3D11Application::Draw()
 	gfx.Draw(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
 }
 
-void D3D11Application::PresentSwapChain()
+void D3D11Application::EndFrame()
 {
+	// Step11: Present the back buffer to the screen, send the back buffer to the back for the next frame
 	m_d3dSwapChain->Present(0, 0);
 }
 

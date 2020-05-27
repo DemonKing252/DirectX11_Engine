@@ -1,7 +1,6 @@
 #pragma once
 #include <DirectXMath.h>
 #include <Windows.h>
-#include "D3DUtil.h"
 #define MaxLights 1
 
 struct PointLight
