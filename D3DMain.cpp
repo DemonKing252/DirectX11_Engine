@@ -11,8 +11,8 @@
 DirectX11_Engine::D3DMain.cpp by Liam Blake (C) 2020 All Rights Reserved.
 
 Created: 2020-04-19
-Modified: 2020-05-23
-Lines of code: 1134
+Modified: 2020-05-27
+Lines of code: 1645
 
 *********************************************************************************/
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR pCmdLine, int mCmdShow)
