@@ -9,16 +9,19 @@ void D3D11Application::InitDeviceAndSwapChain(std::shared_ptr<Window> window) co
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
 	ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
 
-	swapChainDesc.BufferCount = 1;
+	swapChainDesc.BufferCount = 2;
+	swapChainDesc.BufferDesc.Width = 0;
+	swapChainDesc.BufferDesc.Height = 0;
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
+	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.OutputWindow = window->GetWindow();
-	swapChainDesc.BufferDesc.Width = window->GetWindowSize().x;
-	swapChainDesc.BufferDesc.Height = window->GetWindowSize().y;
-	swapChainDesc.Windowed = TRUE;
-	swapChainDesc.SampleDesc.Count = ANTI_ALIASING_SAMPLE_COUNT;
+	swapChainDesc.SampleDesc.Count   = ANTI_ALIASING_SAMPLE_COUNT;
 	swapChainDesc.SampleDesc.Quality = ANTI_ALIASING_QUALITY_COUNT;
+	swapChainDesc.Windowed = TRUE;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 	
 	// Step7: Create our device, device context, and swap chain
@@ -145,7 +148,7 @@ void D3D11Application::Draw()
 void D3D11Application::EndFrame()
 {
 	// Step11: Present the back buffer to the screen, send the back buffer to the back for the next frame
-	m_d3dSwapChain->Present(0, 0);
+	m_d3dSwapChain->Present(static_cast<INT>(gfx.VsyncEnabled()), 0);
 }
 
 void D3D11Application::Clean()

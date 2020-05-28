@@ -1,7 +1,6 @@
 #pragma once
 #include <d3d11.h>
 #include <d3dcompiler.h>
-#include <array>
 #include "D3DCommon.h"
 #include "Vertex.h"
 #include "includes/WICTextureLoader.h"
@@ -27,6 +26,7 @@ class VSConstBuffer;
 typedef class Graphics
 {
 public:
+
 	// Delete the copy constructor. Only one instance of graphics should be created!
 	Graphics(Graphics* copy) = delete;
 	Graphics();
@@ -39,8 +39,12 @@ public:
 	void Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 	void UpdateConstants(ID3D11Device* device, ID3D11DeviceContext* deviceContext);
 	void Clean();
+
+	bool VsyncEnabled()const;
+
 private:
 	float mCntr = 0.0f;
+	bool m_bVsyncEnabled = true;
 
 	// shader info
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_d3dVertexShader;

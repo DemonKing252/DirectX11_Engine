@@ -106,10 +106,11 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
 
-	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
 	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
 	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
 	samplerDesc.MinLOD = 0;
 	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
@@ -240,7 +241,8 @@ void Graphics::InitImGui(ID3D11Device * device, ID3D11DeviceContext* deviceConte
 void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
 	// why is this so low? I've been too lazy to add a feature to control the framerate
-	mCntr += 0.00125f;
+
+	mCntr += 1.0f; // With vsync enabled (locked at 60fps), each cube will rotate 60 degrees per second
 	
 	// view matrix (left handed coordinate system)
 	m_4x4View = DirectX::XMMatrixLookAtLH(D3DUtil::Get().m_EyePos,
@@ -317,7 +319,7 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 		{
 			m_4x4Model =
 				DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
-				DirectX::XMMatrixRotationY(mCntr) *		// Rotate
+				DirectX::XMMatrixRotationY(mCntr*DirectX::XM_PI/180.0f) *		// Rotate
 				DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
 
 			// World transform matrix
@@ -337,7 +339,7 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 			*/
 			m_4x4Model =
 				DirectX::XMMatrixScaling(1.2f, 1.2f, 1.2f) *	// Scale
-				DirectX::XMMatrixRotationY(mCntr) *		// Rotate
+				DirectX::XMMatrixRotationY(mCntr * DirectX::XM_PI / 180.0f) *		// Rotate
 				DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
 
 			// World transform matrix
@@ -383,6 +385,7 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 			settings_have_changed = true;
 		}
 	}
+	ImGui::Checkbox("VSync Enabled", &m_bVsyncEnabled);
 
 	ImGui::NewLine();
 	ImGui::Text("DirectX v11.0 Window (%.0fx%.0f)", ImGui::GetWindowSize().x, ImGui::GetWindowSize().y);
@@ -442,4 +445,9 @@ void Graphics::Clean()
 	
 	m_d3dVSConstantBuffer.Reset();
 	m_d3dPSConstantBuffer.Reset();
+}
+
+bool Graphics::VsyncEnabled() const
+{
+	return m_bVsyncEnabled;
 }

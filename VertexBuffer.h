@@ -3,7 +3,6 @@
 #include <Windows.h>
 #include <wrl.h>
 #include "D3DUtil.h"
-
 template <class T>
 class VertexBuffer
 {
