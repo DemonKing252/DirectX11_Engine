@@ -19,6 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <None Include="AbsenseIlluminationPS.hlsl">
+      <FileType>Document</FileType>
+    </None>
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="D3DCommon.cpp" />
@@ -60,10 +63,10 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="PixelShader.hlsl">
+    <None Include="DefaultPS.hlsl">
       <FileType>Document</FileType>
     </None>
-    <None Include="VertexShader.hlsl">
+    <None Include="VS.hlsl">
       <FileType>Document</FileType>
     </None>
   </ItemGroup>

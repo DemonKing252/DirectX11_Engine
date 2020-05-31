@@ -51,7 +51,7 @@ inline void VertexBuffer<T>::Initialize(ID3D11Device * device, T * data, UINT nu
 	D3D11_SUBRESOURCE_DATA g_SubResource;
 	ZeroMemory(&g_SubResource, sizeof(D3D11_SUBRESOURCE_DATA));
 	g_SubResource.pSysMem = data;
-
+	
 	ThrowIfFailed(device->CreateBuffer(&g_BufferDesc, &g_SubResource, m_buffer.GetAddressOf()));
 }
 

@@ -4,13 +4,12 @@ D3D11Application D3D11Application::s_Instance = D3D11Application();
 
 void D3D11Application::InitDeviceAndSwapChain(std::shared_ptr<Window> window) const
 {
-	/* DirectX 11 swap chain infrastructure  */
 	// Step6: Create a swap chain to manage presenting the front and back buffers
 	DXGI_SWAP_CHAIN_DESC swapChainDesc;
 	ZeroMemory(&swapChainDesc, sizeof(DXGI_SWAP_CHAIN_DESC));
 
 	swapChainDesc.BufferCount = 2;
-	swapChainDesc.BufferDesc.Width = 0;
+	swapChainDesc.BufferDesc.Width  = 0;
 	swapChainDesc.BufferDesc.Height = 0;
 	swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
@@ -21,7 +20,7 @@ void D3D11Application::InitDeviceAndSwapChain(std::shared_ptr<Window> window) co
 	swapChainDesc.SampleDesc.Count   = ANTI_ALIASING_SAMPLE_COUNT;
 	swapChainDesc.SampleDesc.Quality = ANTI_ALIASING_QUALITY_COUNT;
 	swapChainDesc.Windowed = TRUE;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
 
 	
 	// Step7: Create our device, device context, and swap chain
@@ -44,9 +43,10 @@ void D3D11Application::InitDeviceAndSwapChain(std::shared_ptr<Window> window) co
 
 void D3D11Application::InitDepthAndStencilView(std::shared_ptr<Window> window) const
 {
+	// Enable depth and stencil buffers
 	D3D11_TEXTURE2D_DESC depthDesc;
 	ZeroMemory(&depthDesc, sizeof(D3D11_TEXTURE2D_DESC));
-	depthDesc.Width = window->GetWindowSize().x;
+	depthDesc.Width =  window->GetWindowSize().x;
 	depthDesc.Height = window->GetWindowSize().y;
 	depthDesc.MipLevels = 1;
 	depthDesc.ArraySize = 1;
@@ -78,13 +78,16 @@ void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
 	ID3D11Texture2D* pBackBuffer;
 	ZeroMemory(&pBackBuffer, sizeof(ID3D11Texture2D));
 
+	/* Step 8-1 */
 	// get the back buffer address
 	m_d3dSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<LPVOID*>(&pBackBuffer));
 
+	/* Step 8-2 */
 	// create a render target using the back buffer
 	ThrowIfFailed(m_d3dDevice->CreateRenderTargetView(pBackBuffer, NULL, m_d3dBackBuffer.GetAddressOf()));
 	pBackBuffer->Release();
 
+	/* Step 8-3 */
 	// set the render target as the back buffer
 	m_d3dDeviceContext->OMSetRenderTargets(1, m_d3dBackBuffer.GetAddressOf(), m_d3dDepthStencilView.Get());
 

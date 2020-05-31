@@ -48,7 +48,8 @@ private:
 
 	// shader info
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_d3dVertexShader;
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShader;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShaderNoIllumination;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShaderDefault;
 
 	// buffers
 	std::shared_ptr<VertexBuffer<Vertex>> m_vertexBuffer;
@@ -66,6 +67,7 @@ private:
 	// texturing
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fence_shaderResource;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> redstoneLamp_shaderResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stoneBrick_shaderResource;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_d3dSamplerState;
 
 	// blending

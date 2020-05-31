@@ -136,10 +136,13 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="PixelShader.hlsl">
+    <None Include="DefaultPS.hlsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="VertexShader.hlsl">
+    <None Include="VS.hlsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="AbsenseIlluminationPS.hlsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

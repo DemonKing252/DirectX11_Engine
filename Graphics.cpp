@@ -11,7 +11,7 @@ Graphics::Graphics()
 	ZeroMemory(m_d3dVSConstantBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
 	ZeroMemory(m_d3dPSConstantBuffer.GetAddressOf(), sizeof(D3D11_BUFFER_DESC));
 	ZeroMemory(m_d3dVertexShader.GetAddressOf(), sizeof(ID3D11VertexShader));
-	ZeroMemory(m_d3dPixelShader.GetAddressOf(), sizeof(ID3D11PixelShader));
+	ZeroMemory(m_d3dPixelShaderNoIllumination.GetAddressOf(), sizeof(ID3D11PixelShader));
 	ZeroMemory(m_d3dInputLayout.GetAddressOf(), sizeof(ID3D11InputLayout));
 	ZeroMemory(fence_shaderResource.GetAddressOf(), sizeof(ID3D11ShaderResourceView));
 	ZeroMemory(m_d3dSamplerState.GetAddressOf(), sizeof(ID3D11SamplerState));
@@ -28,16 +28,17 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 {
 	// Step 13: Compile and attach the vertex and pixel shaders to our pipeline
 	// Create our pipeline
-	ID3DBlob* vs, *ps;
+	ID3DBlob* vs, *ps1, *ps2;
 	ID3DBlob *errorQueue;
 
 	ZeroMemory(&vs, sizeof(ID3DBlob));
-	ZeroMemory(&ps, sizeof(ID3DBlob));
+	ZeroMemory(&ps1, sizeof(ID3DBlob));
+	ZeroMemory(&ps2, sizeof(ID3DBlob));
 	ZeroMemory(&errorQueue, sizeof(ID3DBlob));
 
 	/* Compile the vertex shader */
 	{
-		D3DCompileFromFile(L"VertexShader.hlsl", 0, 0, "VSMain", "vs_4_0", 0, 0, &vs, &errorQueue);
+		D3DCompileFromFile(L"VS.hlsl", 0, 0, "VSMain", "vs_4_0", 0, 0, &vs, &errorQueue);
 		if (errorQueue != S_OK)
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
@@ -50,9 +51,9 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 			exit(EXIT_FAILURE);
 		}
 	}
-	/* Compile the pixel shader */
+	/* Compile pixel shader #1 */
 	{
-		D3DCompileFromFile(L"PixelShader.hlsl", 0, 0, "PSMain", "ps_4_0", 0, 0, &ps, &errorQueue);
+		D3DCompileFromFile(L"DefaultPS.hlsl", 0, 0, "PSMain", "ps_4_0", 0, 0, &ps1, &errorQueue);
 		if (errorQueue != S_OK)
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
@@ -65,12 +66,28 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 			exit(EXIT_FAILURE);
 		}
 	}
+	/* Compile pixel shader #2 */
+	{
+		D3DCompileFromFile(L"AbsenseIlluminationPS.hlsl", 0, 0, "PSMain", "ps_4_0", 0, 0, &ps2, &errorQueue);
+		if (errorQueue != S_OK)
+		{
+			/* Something went wrong, create a win32 message box and print the error log */
+			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Pixel Shader Could Not Compile!", 0);
+			errorQueue->Release();
+
+			Clean();
+			D3D11Engine::Get().Clean();
+
+			exit(EXIT_FAILURE);
+		}
+	}
 
 	ThrowIfFailed(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), NULL, &m_d3dVertexShader));
-	ThrowIfFailed(device->CreatePixelShader(ps->GetBufferPointer(), ps->GetBufferSize(), NULL, &m_d3dPixelShader));
+
+	ThrowIfFailed(device->CreatePixelShader(ps1->GetBufferPointer(), ps1->GetBufferSize(), NULL, &m_d3dPixelShaderDefault));
+	ThrowIfFailed(device->CreatePixelShader(ps2->GetBufferPointer(), ps2->GetBufferSize(), NULL, &m_d3dPixelShaderNoIllumination));
 
 	deviceContext->VSSetShader(m_d3dVertexShader.Get(), 0, 0);
-	deviceContext->PSSetShader(m_d3dPixelShader.Get(), 0, 0);
 
 	// Step14: Create an input layout that our vertex shader will use
 	// Our layout is 20 bytes in total. Multiply that by 8 and we get our TOTAL
@@ -98,6 +115,10 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	
 	// Redstone lamp texture
 	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, redstoneLamp_shaderResource.GetAddressOf()));
+
+	// Brick texture
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/StoneBrick.jpg", nullptr, stoneBrick_shaderResource.GetAddressOf()));
+
 
 	// Read on D3D11 Sampler States:
 	// https://gaming.stackexchange.com/questions/48912/whats-the-difference-between-bilinear-trilinear-and-anisotropic-texture-filte
@@ -194,9 +215,9 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	m_indexBuffer->Initialize(device, indices, ARRAYSIZE(indices));
 
 	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 0.0f, 0.0f };
-	m_PSConstBuffer->pointLights[0].Strength = { 16.0f, 16.0f, 16.0f };
+	m_PSConstBuffer->pointLights[0].Strength = { 1.0f, 0.6f, 0.0f };
 	m_PSConstBuffer->pointLights[0].SpecularStrength = 1.0f;
-	m_PSConstBuffer->pointLights[0].FallOffStart = 0.1f;
+	m_PSConstBuffer->pointLights[0].FallOffStart = 1.0f;
 	m_PSConstBuffer->pointLights[0].FallOffEnd = 8.0f;
 
 	m_4x4Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
@@ -312,7 +333,38 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 		[-------------------------------------------------]
 
 	******************************************************************/
-	
+	deviceContext->PSSetShaderResources(0, 1, redstoneLamp_shaderResource.GetAddressOf());
+	deviceContext->PSSetShader(m_d3dPixelShaderNoIllumination.Get(), 0, 0);
+	{
+		m_4x4Model =
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+			DirectX::XMMatrixTranslation(0.0f, 0.0f, 0.0f);	// Translate
+
+		// World transform matrix
+		m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);
+
+		// Local transform matrix
+		m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);
+
+		this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
+		deviceContext->DrawIndexed(36, 0, 0);		// Draw Call using index buffer
+	}
+	deviceContext->PSSetShaderResources(0, 1, stoneBrick_shaderResource.GetAddressOf());
+	deviceContext->PSSetShader(m_d3dPixelShaderDefault.Get(), 0, 0);
+	{
+		m_4x4Model =
+			DirectX::XMMatrixScaling(20.0f, 1.0f, 20.0f) *	// Scale
+			DirectX::XMMatrixTranslation(0.0f, -2.0f, 0.0f);	// Translate
+
+		// World transform matrix
+		m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);
+
+		// Local transform matrix
+		m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);
+
+		this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
+		deviceContext->DrawIndexed(36, 0, 0);		// Draw Call using index buffer
+	}
 	for (int i = 0; i < ARRAYSIZE(cubeTranslate); i++)
 	{
 		deviceContext->PSSetShaderResources(0, 1, redstoneLamp_shaderResource.GetAddressOf());
@@ -367,6 +419,9 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	BOOL settings_have_changed = false;
 
 	ImGui::ColorEdit3("Background color", (float*)&D3D11App::Get().clear_color); // Edit 3 floats representing a color
+	
+	ImGui::Text("Light Info");
+	ImGui::Separator();
 	for (int i = 0; i < MaxLights; i++)
 	{
 		float lC[3] = 
@@ -376,7 +431,7 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 			m_PSConstBuffer->pointLights[i].Strength.z 
 		};
 
-		if (ImGui::SliderFloat3("Light Color", lC, 0.0f, 50.0f, "%.1f"))
+		if (ImGui::SliderFloat3("Color", lC, 0.0f, 1.0f, "%.1f"))
 		{
 			m_PSConstBuffer->pointLights[i].Strength.x = lC[Color::R];
 			m_PSConstBuffer->pointLights[i].Strength.y = lC[Color::G];
@@ -384,6 +439,10 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 			settings_have_changed = true;
 		}
+
+		if (ImGui::SliderFloat("Range", &m_PSConstBuffer->pointLights[i].FallOffEnd, 0.1f, 20.0f, "%.1f"))
+			settings_have_changed = true;
+
 	}
 	ImGui::Checkbox("VSync Enabled", &m_bVsyncEnabled);
 
@@ -441,7 +500,7 @@ void Graphics::Clean()
 	
 	m_d3dInputLayout.Reset();
 	m_d3dVertexShader.Reset();
-	m_d3dPixelShader.Reset();
+	m_d3dPixelShaderNoIllumination.Reset();
 	
 	m_d3dVSConstantBuffer.Reset();
 	m_d3dPSConstantBuffer.Reset();
