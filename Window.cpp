@@ -105,7 +105,7 @@ HWND Window::GetWindow() const
 	return m_hwnd;
 }
 
-DirectX::XMFLOAT2 Window::GetWindowSize() const
+DirectX::XMFLOAT2 Window::GetFrameBufferSize() const
 {
 	return windowSize;
 }

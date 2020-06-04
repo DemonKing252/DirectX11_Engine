@@ -3,12 +3,13 @@
 #include <Windows.h>
 #include <wrl.h>
 #include "D3DUtil.h"
+#include "EntityComponentSystem.h"
 template <class T>
-class VertexBuffer
+class VertexBufferComponent : public Component
 {
 public:
-	VertexBuffer(VertexBuffer<T>* other);
-	VertexBuffer();
+	VertexBufferComponent(VertexBufferComponent<T>* other);
+	VertexBufferComponent();
 
 	void Initialize(ID3D11Device* device, T* data, UINT numVerticies);
 	void ZeroMem();
@@ -24,21 +25,21 @@ private:
 };
 
 template<class T>
-inline VertexBuffer<T>::VertexBuffer(VertexBuffer<T>* other)
+inline VertexBufferComponent<T>::VertexBufferComponent(VertexBufferComponent<T>* other)
 {
 	this->m_buffer = other->GetBuffer();
 	this->m_uStride = other->GetStride();
 }
 
 template<class T>
-inline VertexBuffer<T>::VertexBuffer()
+inline VertexBufferComponent<T>::VertexBufferComponent()
 {
 	m_uStride = sizeof(T);
 	m_uOffSet = 0;
 }
 
 template<class T>
-inline void VertexBuffer<T>::Initialize(ID3D11Device * device, T * data, UINT numVertices)
+inline void VertexBufferComponent<T>::Initialize(ID3D11Device * device, T * data, UINT numVertices)
 {
 	D3D11_BUFFER_DESC g_BufferDesc;
 	ZeroMemory(&g_BufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -56,25 +57,25 @@ inline void VertexBuffer<T>::Initialize(ID3D11Device * device, T * data, UINT nu
 }
 
 template<class T>
-inline void VertexBuffer<T>::ZeroMem()
+inline void VertexBufferComponent<T>::ZeroMem()
 {
 	ZeroMemory(m_buffer.GetAddressOf(), sizeof(ID3D11Buffer));
 }
 
 template<class T>
-inline UINT VertexBuffer<T>::GetOffSet() const
+inline UINT VertexBufferComponent<T>::GetOffSet() const
 {
 	return m_uOffSet;
 }
 
 template<class T>
-inline UINT VertexBuffer<T>::GetStride() const
+inline UINT VertexBufferComponent<T>::GetStride() const
 {
 	return m_uStride;
 }
 
 template<class T>
-inline Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer<T>::GetBuffer() const
+inline Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBufferComponent<T>::GetBuffer() const
 {
 	return m_buffer;
 }

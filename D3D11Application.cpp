@@ -17,10 +17,10 @@ void D3D11Application::InitDeviceAndSwapChain(std::shared_ptr<Window> window) co
 	swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.OutputWindow = window->GetWindow();
-	swapChainDesc.SampleDesc.Count   = ANTI_ALIASING_SAMPLE_COUNT;
+	swapChainDesc.SampleDesc.Count = ANTI_ALIASING_SAMPLE_COUNT;
 	swapChainDesc.SampleDesc.Quality = ANTI_ALIASING_QUALITY_COUNT;
 	swapChainDesc.Windowed = TRUE;
-	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_SEQUENTIAL;
+	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 
 	
 	// Step7: Create our device, device context, and swap chain
@@ -46,8 +46,8 @@ void D3D11Application::InitDepthAndStencilView(std::shared_ptr<Window> window) c
 	// Enable depth and stencil buffers
 	D3D11_TEXTURE2D_DESC depthDesc;
 	ZeroMemory(&depthDesc, sizeof(D3D11_TEXTURE2D_DESC));
-	depthDesc.Width =  window->GetWindowSize().x;
-	depthDesc.Height = window->GetWindowSize().y;
+	depthDesc.Width = window->GetFrameBufferSize().x;
+	depthDesc.Height = window->GetFrameBufferSize().y;
 	depthDesc.MipLevels = 1;
 	depthDesc.ArraySize = 1;
 	depthDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -98,17 +98,17 @@ void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = window->GetWindowSize().x;
-	viewport.Height = window->GetWindowSize().y;
+	viewport.Width = window->GetFrameBufferSize().x;
+	viewport.Height = window->GetFrameBufferSize().y;
 	viewport.MinDepth = 0;
 	viewport.MaxDepth = 1;
 
 	m_d3dDeviceContext->RSSetViewports(1, &viewport);
 	
-	clear_color[Color::R] = 0.0f;
-	clear_color[Color::G] = 0.0f;
-	clear_color[Color::B] = 0.2f;
-	clear_color[Color::A] = 1.0f;
+	m_f4ClearColor[Color::R] = 0.0f;
+	m_f4ClearColor[Color::G] = 0.0f;
+	m_f4ClearColor[Color::B] = 0.2f;
+	m_f4ClearColor[Color::A] = 1.0f;
 
 
 	gfx.InitPipeline(m_d3dDevice.Get(), m_d3dDeviceContext.Get());
@@ -118,12 +118,11 @@ void D3D11Application::InitRenderTarget(std::shared_ptr<Window> window) const
 
 void D3D11Application::ClearRenderTargetView()
 {
-	
 	// Step10: Clear the render target
 	// clearing the back buffer and filling it with a background color
 	m_d3dDeviceContext->ClearRenderTargetView(
 		m_d3dBackBuffer.Get(), 
-		clear_color
+		m_f4ClearColor
 	);
 }
 
@@ -150,7 +149,7 @@ void D3D11Application::Draw()
 
 void D3D11Application::EndFrame()
 {
-	// Step11: Present the back buffer to the screen, send the back buffer to the back for the next frame
+	// Step11: Present the back buffer to the screen, send the front buffer to the back for the next frame
 	m_d3dSwapChain->Present(static_cast<INT>(gfx.VsyncEnabled()), 0);
 }
 

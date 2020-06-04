@@ -3,13 +3,14 @@
 #include <Windows.h>
 #include <wrl.h>
 #include "D3DUtil.h"
+#include "EntityComponentSystem.h"
 
 template <class T>
-class IndexBuffer
+class IndexBufferComponent : public Component
 {
 public:
-	IndexBuffer(IndexBuffer<T>* other);
-	IndexBuffer();
+	IndexBufferComponent(IndexBufferComponent<T>* other);
+	IndexBufferComponent();
 
 	void Initialize(ID3D11Device* device, T* data, UINT numVerticies);
 	void ZeroMem();
@@ -23,19 +24,19 @@ private:
 };
 
 template<class T>
-inline IndexBuffer<T>::IndexBuffer(IndexBuffer<T>* other)
+inline IndexBufferComponent<T>::IndexBufferComponent(IndexBufferComponent<T>* other)
 {
 	this->m_buffer = other->GetBuffer();
 	this->m_uStride = other->GetStride();
 }
 
 template<class T>
-inline IndexBuffer<T>::IndexBuffer()
+inline IndexBufferComponent<T>::IndexBufferComponent()
 {
 }
 
 template<class T>
-inline void IndexBuffer<T>::Initialize(ID3D11Device * device, T * data, UINT numIndicies)
+inline void IndexBufferComponent<T>::Initialize(ID3D11Device * device, T * data, UINT numIndicies)
 {
 	D3D11_BUFFER_DESC g_BufferDesc;
 	ZeroMemory(&g_BufferDesc, sizeof(D3D11_BUFFER_DESC));
@@ -53,19 +54,19 @@ inline void IndexBuffer<T>::Initialize(ID3D11Device * device, T * data, UINT num
 }
 
 template<class T>
-inline void IndexBuffer<T>::ZeroMem()
+inline void IndexBufferComponent<T>::ZeroMem()
 {
 	ZeroMemory(m_buffer.GetAddressOf(), sizeof(ID3D11Buffer));
 }
 
 template<class T>
-inline UINT IndexBuffer<T>::GetStride() const
+inline UINT IndexBufferComponent<T>::GetStride() const
 {
 	return sizeof(T);
 }
 
 template<class T>
-inline Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer<T>::GetBuffer() const
+inline Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBufferComponent<T>::GetBuffer() const
 {
 	return m_buffer;
 }

@@ -26,8 +26,10 @@ class PSConstBuffer : public D3DUploadBuffer
 {
 public:
 	DirectX::XMFLOAT4 EyeWorldSpace;
+	DirectX::XMFLOAT4 Color;
 
-	PointLight pointLights[MaxLights];
+
+	PointLight pointLights[PointLightCount];
 	
 	PSConstBuffer() {}
 };

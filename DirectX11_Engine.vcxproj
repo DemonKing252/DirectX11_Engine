@@ -27,6 +27,7 @@
     <ClCompile Include="D3DCommon.cpp" />
     <ClCompile Include="D3D11Application.cpp" />
     <ClCompile Include="D3DUtil.cpp" />
+    <ClCompile Include="EntityComponentSystem.cpp" />
     <ClCompile Include="Graphics.cpp" />
     <ClCompile Include="ImGui\imgui.cpp" />
     <ClCompile Include="ImGui\imgui_demo.cpp" />
@@ -36,6 +37,9 @@
     <ClCompile Include="ImGui\imgui_widgets.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="MathUtil.cpp" />
+    <ClCompile Include="RenderItem.cpp" />
+    <ClCompile Include="SubMeshGeometry.cpp" />
+    <ClCompile Include="Transform.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -47,6 +51,7 @@
     <ClInclude Include="D3DCommon.h" />
     <ClInclude Include="D3D11Application.h" />
     <ClInclude Include="D3DUtil.h" />
+    <ClInclude Include="EntityComponentSystem.h" />
     <ClInclude Include="Graphics.h" />
     <ClInclude Include="ImGui\imconfig.h" />
     <ClInclude Include="ImGui\imgui.h" />
@@ -58,6 +63,9 @@
     <ClInclude Include="ImGui\imstb_truetype.h" />
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="MathUtil.h" />
+    <ClInclude Include="RenderItem.h" />
+    <ClInclude Include="SubMeshGeometry.h" />
+    <ClInclude Include="Transform.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="Window.h" />

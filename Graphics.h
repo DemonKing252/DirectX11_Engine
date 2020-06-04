@@ -9,10 +9,14 @@
 #include "D3DUtil.h"
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include <vector>
 // ImGui for DirectX11
 #include "ImGui/imgui_impl_dx11.h"
 #include "ImGui/imgui_impl_win32.h"
 #include "ImGui/imgui.h"
+#include "SubMeshGeometry.h"
+#include "RenderItem.h"
+#include "Transform.h"
 
 // DirectX Libraries 
 #pragma comment(lib, "d3d11.lib")
@@ -44,16 +48,16 @@ public:
 
 private:
 	float mCntr = 0.0f;
-	bool m_bVsyncEnabled = true;
+	bool m_bVsyncEnabled = true;			// If true then lock the framerate to monitor maximum refresh rate.
+	BOOL m_bSettings_have_changed = false;	// Monitor ImGui buttons and sliders.
 
 	// shader info
 	Microsoft::WRL::ComPtr<ID3D11VertexShader> m_d3dVertexShader;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShaderNoIllumination;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShaderDefault;
 
-	// buffers
-	std::shared_ptr<VertexBuffer<Vertex>> m_vertexBuffer;
-	std::shared_ptr<IndexBuffer<UINT>> m_indexBuffer;
+	std::shared_ptr<SubMeshGeometry> cubeSubMesh;
+	std::vector<std::shared_ptr<RenderItem>> m_vRenderItems;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dVSConstantBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dPSConstantBuffer;
@@ -65,9 +69,9 @@ private:
 	PSConstBuffer* m_PSConstBuffer;
 	
 	// texturing
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> fence_shaderResource;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> redstoneLamp_shaderResource;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stoneBrick_shaderResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResources[3];
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> redstoneLamp_shaderResource;
+	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stoneBrick_shaderResource;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_d3dSamplerState;
 
 	// blending

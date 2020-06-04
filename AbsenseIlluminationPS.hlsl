@@ -1,4 +1,4 @@
-#define MaxLights 2
+#define PointLightCount 2
 struct PointLight
 {
 	// 4 bytes for each floating point number
@@ -19,8 +19,9 @@ struct PointLight
 cbuffer PSConstantBuffer : register(b0)
 {
 	float4 EyeWorldSpace; // Eye Position (World Space)
+    float4 Color;
     
-	PointLight light[MaxLights];
+    PointLight light[PointLightCount];
 }
 
 
@@ -38,5 +39,5 @@ float4 PSMain(PSLayout layout) : SV_TARGET
 {
 	float4 ambientLight = float4(0.2f, 0.2f, 0.2f, 1.0f);
 
-	return clamp(float4(light[0].Strength, 1.0f), 0.0f, 2.0f);
+	return clamp(Color, 0.0f, 1.0f);
 }

@@ -1,17 +1,19 @@
 #pragma once
 #include <DirectXMath.h>
 #include <Windows.h>
-#define MaxLights 1
+#define PointLightCount 2
 
 struct PointLight
 {
 	DirectX::XMFLOAT3 Position;
-	FLOAT SpecularStrength;
+	float FallOffStart;
 
+	// 16 bytes
 	DirectX::XMFLOAT3 Strength;
-	FLOAT FallOffStart;
+	float SpecularStrength;
 
+	// 16 bytes
 	DirectX::XMFLOAT3 Direction;
-	FLOAT FallOffEnd;
+	float FallOffEnd;
 
 };

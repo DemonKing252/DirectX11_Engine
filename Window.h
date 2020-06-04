@@ -23,7 +23,7 @@ public:
 	HWND GetWindow()const;
 	
 	std::shared_ptr<Camera> GetCamera();
-	DirectX::XMFLOAT2 GetWindowSize() const;
+	DirectX::XMFLOAT2 GetFrameBufferSize() const;
 
 	BOOL m_bQuitMessagePosted;
 private:

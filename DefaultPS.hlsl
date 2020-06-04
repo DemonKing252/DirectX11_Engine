@@ -1,4 +1,4 @@
-#define MaxLights 2
+#define PointLightCount 2
 struct PointLight
 {
 	// 4 bytes for each floating point number
@@ -19,11 +19,10 @@ struct PointLight
 cbuffer PSConstantBuffer : register(b0)
 {
 	float4 EyeWorldSpace;		// Eye Position (World Space)
+    float4 Color;
     
-    PointLight light[MaxLights];
-    
+    PointLight light[PointLightCount];
 }
-
 
 struct PSLayout
 {
@@ -43,7 +42,7 @@ float3 ComputePointLight(PointLight light, PSLayout layout, float attenuation)
 	float3 norm = normalize(layout.normal);
 	float3 lightDir = normalize(light.Position.xyz - layout.fragPos);
 	diff = max(dot(norm, lightDir), 0.0f);
-    diffuse = (diff * light.Strength.xyz * light.SpecularStrength) * ((light.FallOffEnd - attenuation) / (light.FallOffEnd - light.FallOffStart));
+    diffuse = (diff * light.Strength.xyz) * ((light.FallOffEnd - attenuation) / (light.FallOffEnd - light.FallOffStart));
 
 	// Calculate Specular:
 	float3 viewDir = normalize(EyeWorldSpace.xyz - layout.fragPos);
@@ -55,22 +54,47 @@ float3 ComputePointLight(PointLight light, PSLayout layout, float attenuation)
 }
 float4 PSMain(PSLayout layout) : SV_TARGET
 {
-	const float3 ambientLight = float3(0.2f, 0.2f, 0.2f);
+    const float3 ambientLight = float3(0.2f, 0.2f, 0.2f);
 
-	float3 totalLight = float3(0, 0, 0);
+    float3 totalLight = float3(0, 0, 0);
 
-	float4 g_sampleColor = g_texture.Sample(g_samplerState, layout.texCoord);
+    float4 g_sampleColor = g_texture.Sample(g_samplerState, layout.texCoord);
 
-	for (int i = 0; i < MaxLights; i++)
-	{
-		float attenuation = length(light[i].Position.xyz - layout.fragPos);
+    for (int i = 0; i < PointLightCount; i++)
+    {
+        float attenuation = length(light[i].Position.xyz - layout.fragPos);
         
-		if (attenuation <= light[i].FallOffEnd)
-			totalLight += ComputePointLight(light[i], layout, attenuation);
-	}
-	totalLight += ambientLight;
-
-	// Sampler state (texture) multiplied by the total light that we calculated
+        if (attenuation <= light[i].FallOffEnd)
+            totalLight += ComputePointLight(light[i], layout, attenuation);
+    }
+    totalLight += ambientLight;
+    
+	//Sampler state (texture) multiplied by the total light that we calculated
+    
+    /* Shadow Mapping Experiement */
+    
+    //float3 object = normalize(float3(0.0f, -2.0f, 0.0f));
+    //float3 frag = normalize(layout.fragPos);
+    //
+    //float3 dirLight = float3(0.0f, -1.0f, 0.0f);
+    //// dot product between light direction and fragment position
+    //float dotProd = dot(object - frag, dirLight);
+    //    
+    //float4 ambient = float4(0.3f, 0.3f, 0.3f, 1.0f);
+    //
+    //// -1 means that the vectors are EXACTLY opposite (light to surface and light direction) 
+    //// +1 means that the vectors are EXACTLY opposite (light to surface and light direction) 
+    //
+    //// ------>
+    //// -------
+    ////       ^--------
+    ////               ^------>
+    //if (dotProd >= +0.08f)    
+    //{
+    //    ambient = float4(light[0].Strength, 1.0f);
+    //    // We can show light, there is no shadow here
+    //}
+    
     return (g_sampleColor * float4(totalLight, 1.0f));
 }
 /*

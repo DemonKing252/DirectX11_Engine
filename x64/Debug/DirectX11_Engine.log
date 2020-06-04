@@ -1,3 +1,2 @@
 ﻿  Graphics.cpp
-c:\users\owner\source\repos\directx11_engine\directx11_engine\graphics.cpp(460): warning C4805: '==': unsafe mix of type 'BOOL' and type 'bool' in operation
   DirectX11_Engine.vcxproj -> C:\Users\Owner\source\repos\DirectX11_Engine\x64\Debug\DirectX11_Engine.exe

@@ -33,7 +33,7 @@ public:
 		return s_Instance;
 	}
 
-	mutable FLOAT clear_color[4];
+	mutable FLOAT m_f4ClearColor[4];
 
 private:
 	static D3D11Application s_Instance;

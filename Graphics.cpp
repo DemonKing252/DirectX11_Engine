@@ -13,7 +13,9 @@ Graphics::Graphics()
 	ZeroMemory(m_d3dVertexShader.GetAddressOf(), sizeof(ID3D11VertexShader));
 	ZeroMemory(m_d3dPixelShaderNoIllumination.GetAddressOf(), sizeof(ID3D11PixelShader));
 	ZeroMemory(m_d3dInputLayout.GetAddressOf(), sizeof(ID3D11InputLayout));
-	ZeroMemory(fence_shaderResource.GetAddressOf(), sizeof(ID3D11ShaderResourceView));
+	ZeroMemory(m_shaderResources[ShaderResource::Fence].GetAddressOf(), sizeof(ID3D11ShaderResourceView));
+	ZeroMemory(m_shaderResources[ShaderResource::RedstoneLamp].GetAddressOf(), sizeof(ID3D11ShaderResourceView));
+	ZeroMemory(m_shaderResources[ShaderResource::StoneBrick].GetAddressOf(), sizeof(ID3D11ShaderResourceView));
 	ZeroMemory(m_d3dSamplerState.GetAddressOf(), sizeof(ID3D11SamplerState));
 
 	m_PSConstBuffer = new PSConstBuffer();
@@ -50,7 +52,9 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 			
 			exit(EXIT_FAILURE);
 		}
+		ThrowIfFailed(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), NULL, &m_d3dVertexShader));
 	}
+	
 	/* Compile pixel shader #1 */
 	{
 		D3DCompileFromFile(L"DefaultPS.hlsl", 0, 0, "PSMain", "ps_4_0", 0, 0, &ps1, &errorQueue);
@@ -65,6 +69,7 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 			
 			exit(EXIT_FAILURE);
 		}
+		ThrowIfFailed(device->CreatePixelShader(ps1->GetBufferPointer(), ps1->GetBufferSize(), NULL, &m_d3dPixelShaderDefault));
 	}
 	/* Compile pixel shader #2 */
 	{
@@ -80,13 +85,8 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 			exit(EXIT_FAILURE);
 		}
+		ThrowIfFailed(device->CreatePixelShader(ps2->GetBufferPointer(), ps2->GetBufferSize(), NULL, &m_d3dPixelShaderNoIllumination));
 	}
-
-	ThrowIfFailed(device->CreateVertexShader(vs->GetBufferPointer(), vs->GetBufferSize(), NULL, &m_d3dVertexShader));
-
-	ThrowIfFailed(device->CreatePixelShader(ps1->GetBufferPointer(), ps1->GetBufferSize(), NULL, &m_d3dPixelShaderDefault));
-	ThrowIfFailed(device->CreatePixelShader(ps2->GetBufferPointer(), ps2->GetBufferSize(), NULL, &m_d3dPixelShaderNoIllumination));
-
 	deviceContext->VSSetShader(m_d3dVertexShader.Get(), 0, 0);
 
 	// Step14: Create an input layout that our vertex shader will use
@@ -111,19 +111,18 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	deviceContext->IASetInputLayout(m_d3dInputLayout.Get());
 
 	// Fence texture
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/Fence.png", nullptr, fence_shaderResource.GetAddressOf()));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/Fence.png", nullptr, m_shaderResources[ShaderResource::Fence].GetAddressOf()));
 	
 	// Redstone lamp texture
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, redstoneLamp_shaderResource.GetAddressOf()));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, m_shaderResources[ShaderResource::RedstoneLamp].GetAddressOf()));
 
 	// Brick texture
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/StoneBrick.jpg", nullptr, stoneBrick_shaderResource.GetAddressOf()));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/StoneBrick.jpg", nullptr, m_shaderResources[ShaderResource::StoneBrick].GetAddressOf()));
 
 
 	// Read on D3D11 Sampler States:
 	// https://gaming.stackexchange.com/questions/48912/whats-the-difference-between-bilinear-trilinear-and-anisotropic-texture-filte
 	
-
 	D3D11_SAMPLER_DESC samplerDesc;
 	ZeroMemory(&samplerDesc, sizeof(D3D11_SAMPLER_DESC));
 
@@ -145,7 +144,7 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 	Vertex vertices[] = 
 	{
-		//					[	vertex position	   ]					[texture coord]			[ normal ]
+		//								[  vertex position  ]					[texture coord]				   [	  normal	  ]
 		/*0*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f)),
 		/*1*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, -0.5f), DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f)),
 		/*2*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f)),
@@ -203,22 +202,111 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		20, 23, 22
 
 	};
+	
+	cubeSubMesh = std::make_shared<SubMeshGeometry>();
 
-	m_vertexBuffer = std::make_shared<VertexBuffer<Vertex>>();
+	cubeSubMesh->IndexCount = ARRAYSIZE(indices);
+	cubeSubMesh->VertexCount = ARRAYSIZE(vertices);
 
-	m_vertexBuffer->ZeroMem();
-	m_vertexBuffer->Initialize(device, vertices, ARRAYSIZE(vertices));
+	// Add a vertex buffer component to our cube
+	cubeSubMesh->AddComponent<VertexBufferComponent<Vertex>>();
+	cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().ZeroMem();
+	cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().Initialize(device, vertices, ARRAYSIZE(vertices));
 
-	m_indexBuffer = std::make_shared<IndexBuffer<UINT>>();
+	// Add a index buffer component to our cube
+	cubeSubMesh->AddComponent<IndexBufferComponent<UINT>>();
+	cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().ZeroMem();
+	cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().Initialize(device, indices, ARRAYSIZE(indices));
+		
+	DirectX::XMFLOAT3 temp_positions[10] =
+	{
+		{ +2.0f, 0.0f, 0.0f },
+		{ -2.0f, 0.0f, 0.0f },
+		{ +4.0f, 0.0f, 0.0f },
+		{ -4.0f, 0.0f, 0.0f },
+		{ +6.0f, 0.0f, 0.0f },
+		{ -6.0f, 0.0f, 0.0f },
+		{ +8.0f, 0.0f, 0.0f },
+		{ -8.0f, 0.0f, 0.0f },
+		{ +10.0f, 0.0f, 0.0f },
+		{ -10.0f, 0.0f, 0.0f },
+	};
+	for (int i = 0; i < ARRAYSIZE(temp_positions); i++)
+	{
+		m_vRenderItems.push_back(std::make_shared<RenderItem>());
+		m_vRenderItems.back()->AddComponent<TransformComponent>(); 
 
-	m_indexBuffer->ZeroMem();
-	m_indexBuffer->Initialize(device, indices, ARRAYSIZE(indices));
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetTranslation(temp_positions[i]);
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetScaling(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetRotationAxis(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetAngle(0.0f);
+	
+		DirectX::XMMATRIX Model =
+				DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+				DirectX::XMMatrixRotationY(0.0f) *		// Rotate
+				DirectX::XMMatrixTranslation(temp_positions[i].x, temp_positions[i].y, temp_positions[i].z);	// Translate
 
-	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 0.0f, 0.0f };
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetModelMatrix(Model);
+		m_vRenderItems.back()->shaderResource = ShaderResource::RedstoneLamp;
+		m_vRenderItems.back()->m_bDoesRotate = false;
+		m_vRenderItems.back()->m_bIsLight = false;
+		m_vRenderItems.back()->pixelShader = PixelShader::Default;
+	}
+	// Platform
+	{
+		m_vRenderItems.push_back(std::make_shared<RenderItem>());
+		m_vRenderItems.back()->AddComponent<TransformComponent>();
+
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetTranslation({ 0.0f, -2.0f, 0.0f });
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetScaling({ 20.0f, 1.0f, 20.0f });
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f});
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetAngle(0.0f);
+
+		DirectX::XMMATRIX Model =
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+			DirectX::XMMatrixTranslation(0.0f, -2.0f, 0.0f);	// Translate
+
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetModelMatrix(Model);
+		m_vRenderItems.back()->shaderResource = ShaderResource::StoneBrick;
+		m_vRenderItems.back()->m_bDoesRotate = false;
+		m_vRenderItems.back()->m_bIsLight = false;
+		m_vRenderItems.back()->pixelShader = PixelShader::Default;
+	}
+	// Lights
+	for (int i = 0; i < PointLightCount; i++)
+	{
+		m_vRenderItems.push_back(std::make_shared<RenderItem>());
+		m_vRenderItems.back()->AddComponent<TransformComponent>();
+
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetTranslation(m_PSConstBuffer->pointLights[i].Position);
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetScaling({ 1.0f, 1.0f, 1.0f });
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f });
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetAngle(0.0f);
+
+		DirectX::XMMATRIX Model =
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+			DirectX::XMMatrixTranslation(m_PSConstBuffer->pointLights[i].Position.x,
+									     m_PSConstBuffer->pointLights[i].Position.y,
+									     m_PSConstBuffer->pointLights[i].Position.z);	// Translate
+
+		m_vRenderItems.back()->GetComponent<TransformComponent>().SetModelMatrix(Model);
+		m_vRenderItems.back()->shaderResource = ShaderResource::StoneBrick;
+		m_vRenderItems.back()->m_bDoesRotate = false;
+		m_vRenderItems.back()->m_bIsLight = true;
+		m_vRenderItems.back()->pixelShader = PixelShader::NoIllumination;
+	}
+
+	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 0.0f, 5.0f };
 	m_PSConstBuffer->pointLights[0].Strength = { 1.0f, 0.6f, 0.0f };
-	m_PSConstBuffer->pointLights[0].SpecularStrength = 1.0f;
+	m_PSConstBuffer->pointLights[0].SpecularStrength = 4.0f;
 	m_PSConstBuffer->pointLights[0].FallOffStart = 1.0f;
 	m_PSConstBuffer->pointLights[0].FallOffEnd = 8.0f;
+
+	m_PSConstBuffer->pointLights[1].Position = { 0.0f, 0.0f, -5.0f };
+	m_PSConstBuffer->pointLights[1].Strength = { 0.0f, 1.0f, 0.0f };
+	m_PSConstBuffer->pointLights[1].SpecularStrength = 4.0f;
+	m_PSConstBuffer->pointLights[1].FallOffStart = 1.0f;
+	m_PSConstBuffer->pointLights[1].FallOffEnd = 8.0f;
 
 	m_4x4Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
 		800.0f / 600.0f, // Screen aspect
@@ -278,32 +366,21 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
-	UINT offset = m_vertexBuffer->GetOffSet();
-	UINT stride = m_vertexBuffer->GetStride();
+	assert(cubeSubMesh->HasComponent<VertexBufferComponent<Vertex>>());
+
+	UINT offset = cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetOffSet();
+	UINT stride = cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetStride();
 
 	// Step16: Attach our vertex buffer and set our desired primitive topology type
 	// Read ---> [https://docs.microsoft.com/en-us/windows/win32/api/d3dcommon/ne-d3dcommon-d3d_primitive_topology]
 
 	// bind vertex/index buffers, and set our primitive type
-	deviceContext->IASetVertexBuffers(0, 1, m_vertexBuffer->GetBuffer().GetAddressOf(), &stride, &offset);
-	deviceContext->IASetIndexBuffer(m_indexBuffer->GetBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
+	deviceContext->IASetVertexBuffers(0, 1, cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetBuffer().GetAddressOf(), &stride, &offset);
+	deviceContext->IASetIndexBuffer(cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().GetBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
 	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	// set our texture sampler state and texture itself to be active on the pipeline
 	deviceContext->PSSetSamplers(0, 1, m_d3dSamplerState.GetAddressOf());
-	DirectX::XMFLOAT3 cubeTranslate[10] = 
-	{
-		{ +2.0f, 0.0f, 0.0f },
-		{ -2.0f, 0.0f, 0.0f },
-		{ +4.0f, 0.0f, 0.0f },
-		{ -4.0f, 0.0f, 0.0f },
-		{ +6.0f, 0.0f, 0.0f },
-		{ -6.0f, 0.0f, 0.0f },
-		{ +8.0f, 0.0f, 0.0f },
-		{ -8.0f, 0.0f, 0.0f },
-		{ +10.0f, 0.0f, 0.0f },
-		{ -10.0f, 0.0f, 0.0f },
-	};
 
 	// Step17: Draw our shape
 
@@ -333,46 +410,60 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 		[-------------------------------------------------]
 
 	******************************************************************/
-	deviceContext->PSSetShaderResources(0, 1, redstoneLamp_shaderResource.GetAddressOf());
+
+	// Save on performance! 
+	// Important because many of these items use the same shader resource!
+	// Save every second you can on rendering time!
+
+	ShaderResource activeResource = ShaderResource::None;
+	PixelShader activePixelShader = PixelShader::Undefined;
+
 	deviceContext->PSSetShader(m_d3dPixelShaderNoIllumination.Get(), 0, 0);
+	for (int i = 0; i < PointLightCount; i++)
 	{
 		m_4x4Model =
 			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
-			DirectX::XMMatrixTranslation(0.0f, 0.0f, 0.0f);	// Translate
-
+			DirectX::XMMatrixTranslation(m_PSConstBuffer->pointLights[i].Position.x, 
+										 m_PSConstBuffer->pointLights[i].Position.y,
+										 m_PSConstBuffer->pointLights[i].Position.z);	// Translate
+	
 		// World transform matrix
 		m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);
-
+	
 		// Local transform matrix
 		m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);
-
+	
+		m_PSConstBuffer->Color = 
+		{
+			m_PSConstBuffer->pointLights[i].Strength.x,
+			m_PSConstBuffer->pointLights[i].Strength.y,
+			m_PSConstBuffer->pointLights[i].Strength.z,
+			1.0f
+		};
 		this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
-		deviceContext->DrawIndexed(36, 0, 0);		// Draw Call using index buffer
+		deviceContext->DrawIndexed(cubeSubMesh->IndexCount, 0, 0);		// Draw Call using index buffer
 	}
-	deviceContext->PSSetShaderResources(0, 1, stoneBrick_shaderResource.GetAddressOf());
+	
 	deviceContext->PSSetShader(m_d3dPixelShaderDefault.Get(), 0, 0);
+	for (auto ri : m_vRenderItems)
 	{
-		m_4x4Model =
-			DirectX::XMMatrixScaling(20.0f, 1.0f, 20.0f) *	// Scale
-			DirectX::XMMatrixTranslation(0.0f, -2.0f, 0.0f);	// Translate
+		assert(ri->HasComponent<TransformComponent>());
 
-		// World transform matrix
-		m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);
-
-		// Local transform matrix
-		m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);
-
-		this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
-		deviceContext->DrawIndexed(36, 0, 0);		// Draw Call using index buffer
-	}
-	for (int i = 0; i < ARRAYSIZE(cubeTranslate); i++)
-	{
-		deviceContext->PSSetShaderResources(0, 1, redstoneLamp_shaderResource.GetAddressOf());
+		if (ri->shaderResource != activeResource)
+			deviceContext->PSSetShaderResources(0, 1, m_shaderResources[ri->shaderResource].GetAddressOf());
 		{
+
 			m_4x4Model =
-				DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
-				DirectX::XMMatrixRotationY(mCntr*DirectX::XM_PI/180.0f) *		// Rotate
-				DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
+				DirectX::XMMatrixScaling(ri->GetComponent<TransformComponent>().GetScaling().x,
+					ri->GetComponent<TransformComponent>().GetScaling().y,
+					ri->GetComponent<TransformComponent>().GetScaling().z) *
+
+				DirectX::XMMatrixRotationAxis(DirectX::XMLoadFloat3(&ri->GetComponent<TransformComponent>().GetRotationAxis()),
+																   	 ri->m_bDoesRotate ? mCntr * DirectX::XM_PI / 180.0f : 0.0f) *
+
+				DirectX::XMMatrixTranslation(ri->GetComponent<TransformComponent>().GetTranslation().x, 
+											 ri->GetComponent<TransformComponent>().GetTranslation().y, 
+											 ri->GetComponent<TransformComponent>().GetTranslation().z);	// Translate
 
 			// World transform matrix
 			m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);	
@@ -381,27 +472,7 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 			m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);	
 			
 			this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
-			deviceContext->DrawIndexed(36, 0, 0);		// Draw Call using index buffer
-		}
-		deviceContext->PSSetShaderResources(0, 1, fence_shaderResource.GetAddressOf());
-		{
-			/* Sequential Order:
-
-				Transform = Scale * Rotate * Translate 
-			*/
-			m_4x4Model =
-				DirectX::XMMatrixScaling(1.2f, 1.2f, 1.2f) *	// Scale
-				DirectX::XMMatrixRotationY(mCntr * DirectX::XM_PI / 180.0f) *		// Rotate
-				DirectX::XMMatrixTranslation(cubeTranslate[i].x, cubeTranslate[i].y, cubeTranslate[i].z);	// Translate
-
-			// World transform matrix
-			m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);	
-
-			// Local transform matrix
-			m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);	
-			
-			this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
-			deviceContext->DrawIndexed(36, 0, 0);		// Draw Call using index buffer
+			deviceContext->DrawIndexed(cubeSubMesh->IndexCount, 0, 0);		// Draw Call using index buffer
 		}
 	}
 
@@ -413,36 +484,36 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	ImGui::Begin("Enviorment Settings");
 	ImGui::SetWindowPos(ImVec2(0, 0));
-	ImGui::SetWindowSize(ImVec2(371, 258));
+	ImGui::SetWindowSize(ImVec2(365, 272));
 
 	// Determine if we need to update our constant buffers
-	BOOL settings_have_changed = false;
-
-	ImGui::ColorEdit3("Background color", (float*)&D3D11App::Get().clear_color); // Edit 3 floats representing a color
+	
+	ImGui::ColorEdit3("Background color", (float*)&D3D11App::Get().m_f4ClearColor); // Edit 3 floats representing a color
 	
 	ImGui::Text("Light Info");
 	ImGui::Separator();
-	for (int i = 0; i < MaxLights; i++)
+	
+	char buffer[20];
+	for (int i = 0; i < PointLightCount; i++) 
 	{
-		float lC[3] = 
-		{ 
-			m_PSConstBuffer->pointLights[i].Strength.x, 
-			m_PSConstBuffer->pointLights[i].Strength.y, 
-			m_PSConstBuffer->pointLights[i].Strength.z 
+		float light_color[3] =
+		{
+			 m_PSConstBuffer->pointLights[i].Strength.x, m_PSConstBuffer->pointLights[i].Strength.y, m_PSConstBuffer->pointLights[i].Strength.z,
 		};
 
-		if (ImGui::SliderFloat3("Color", lC, 0.0f, 1.0f, "%.1f"))
+		sprintf_s(buffer, "Color #%d", i + 1);
+		if (ImGui::SliderFloat3(buffer, light_color, 0.0f, 1.0f, "%.1f"))
 		{
-			m_PSConstBuffer->pointLights[i].Strength.x = lC[Color::R];
-			m_PSConstBuffer->pointLights[i].Strength.y = lC[Color::G];
-			m_PSConstBuffer->pointLights[i].Strength.z = lC[Color::B];
-
-			settings_have_changed = true;
+			m_PSConstBuffer->pointLights[i].Strength.x = light_color[Color::R];
+			m_PSConstBuffer->pointLights[i].Strength.y = light_color[Color::G];
+			m_PSConstBuffer->pointLights[i].Strength.z = light_color[Color::B];
+			m_bSettings_have_changed = true;
 		}
+		sprintf_s(buffer, "Range #%d", i + 1);
+		if (ImGui::SliderFloat(buffer, &m_PSConstBuffer->pointLights[i].FallOffEnd, 0.1f, 20.0f, "%.1f"))
+			m_bSettings_have_changed = true;
 
-		if (ImGui::SliderFloat("Range", &m_PSConstBuffer->pointLights[i].FallOffEnd, 0.1f, 20.0f, "%.1f"))
-			settings_have_changed = true;
-
+		ImGui::Separator();
 	}
 	ImGui::Checkbox("VSync Enabled", &m_bVsyncEnabled);
 
@@ -454,12 +525,12 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	ImGui::End();
 
 	ImGui::Render();
-
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 
-	if (settings_have_changed == true)
-		UpdateConstants(device, deviceContext);
-
+	if (m_bSettings_have_changed) {
+		this->UpdateConstants(device, deviceContext);
+		m_bSettings_have_changed = false;
+	}
 }
 
 void Graphics::UpdateConstants(ID3D11Device * device, ID3D11DeviceContext * deviceContext)
@@ -492,11 +563,16 @@ void Graphics::Clean()
 	delete m_VSConstBuffer;
 	delete m_PSConstBuffer;
 
-	fence_shaderResource.Reset();
-	m_d3dSamplerState.Reset();
+	for (int i = 0; i < 3; i++)
+	{
+		m_shaderResources[i].Reset();
+	}
+
+	//m_shaderResources.Reset();
+	//m_d3dSamplerState.Reset();
 	
-	m_vertexBuffer->GetBuffer().Reset();
-	m_indexBuffer->GetBuffer().Reset();
+	cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetBuffer().Reset();
+	cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().GetBuffer().Reset();
 	
 	m_d3dInputLayout.Reset();
 	m_d3dVertexShader.Reset();
