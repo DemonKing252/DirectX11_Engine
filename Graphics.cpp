@@ -369,7 +369,6 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	deviceContext->PSSetSamplers(0, 1, m_d3dSamplerState.GetAddressOf());
 
 	// Step17: Draw our shape
-
 	/* Important Notes */
 	/******************************************************************
 		
