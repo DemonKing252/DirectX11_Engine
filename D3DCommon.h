@@ -1,10 +1,15 @@
 #pragma once
 #include <DirectXMath.h>
+#include "EntityComponentSystem.h"
 #include <Windows.h>
+#include <d3d11.h>
+#include <wrl.h>
 #define PointLightCount 2
 
-struct PointLight
+enum ShaderResource { Fence, RedstoneLamp, StoneBrick, None };
+class PointLight
 {
+public:
 	DirectX::XMFLOAT3 Position;
 	float FallOffStart;
 
@@ -15,5 +20,18 @@ struct PointLight
 	// 16 bytes
 	DirectX::XMFLOAT3 Direction;
 	float FallOffEnd;
+
+};
+
+class ShaderResourceViewComponent : public Component
+{
+public:
+	ShaderResource shaderResourceViewType;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResource;
+	
+	ShaderResourceViewComponent();
+	~ShaderResourceViewComponent();
+
+	void ZeroMem();
 
 };

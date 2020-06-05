@@ -13,9 +13,9 @@ Graphics::Graphics()
 	ZeroMemory(m_d3dVertexShader.GetAddressOf(), sizeof(ID3D11VertexShader));
 	ZeroMemory(m_d3dPixelShaderNoIllumination.GetAddressOf(), sizeof(ID3D11PixelShader));
 	ZeroMemory(m_d3dInputLayout.GetAddressOf(), sizeof(ID3D11InputLayout));
-	ZeroMemory(m_shaderResources[ShaderResource::Fence].GetAddressOf(), sizeof(ID3D11ShaderResourceView));
-	ZeroMemory(m_shaderResources[ShaderResource::RedstoneLamp].GetAddressOf(), sizeof(ID3D11ShaderResourceView));
-	ZeroMemory(m_shaderResources[ShaderResource::StoneBrick].GetAddressOf(), sizeof(ID3D11ShaderResourceView));
+	ZeroMemory(m_shaderResource_Fence.GetAddressOf(), sizeof(ID3D11ShaderResourceView));
+	ZeroMemory(m_shaderResource_RedstoneLamp.GetAddressOf(), sizeof(ID3D11ShaderResourceView));
+	ZeroMemory(m_shaderResource_StoneBrick.GetAddressOf(), sizeof(ID3D11ShaderResourceView));
 	ZeroMemory(m_d3dSamplerState.GetAddressOf(), sizeof(ID3D11SamplerState));
 
 	m_PSConstBuffer = new PSConstBuffer();
@@ -111,13 +111,13 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	deviceContext->IASetInputLayout(m_d3dInputLayout.Get());
 
 	// Fence texture
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/Fence.png", nullptr, m_shaderResources[ShaderResource::Fence].GetAddressOf()));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/Fence.png", nullptr, m_shaderResource_Fence.GetAddressOf()));
 	
 	// Redstone lamp texture
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, m_shaderResources[ShaderResource::RedstoneLamp].GetAddressOf()));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, m_shaderResource_RedstoneLamp.GetAddressOf()));
 
 	// Brick texture
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/StoneBrick.jpg", nullptr, m_shaderResources[ShaderResource::StoneBrick].GetAddressOf()));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/StoneBrick.jpg", nullptr, m_shaderResource_StoneBrick.GetAddressOf()));
 
 
 	// Read on D3D11 Sampler States:
@@ -233,67 +233,53 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	};
 	for (int i = 0; i < ARRAYSIZE(temp_positions); i++)
 	{
-		m_vRenderItems.push_back(std::make_shared<RenderItem>());
-		m_vRenderItems.back()->AddComponent<TransformComponent>(); 
+		auto redstoneLamp = std::make_shared<RenderItem>();
 
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetTranslation(temp_positions[i]);
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetScaling(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetRotationAxis(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetAngle(0.0f);
+		redstoneLamp->AddComponent<TransformComponent>(); 
+		redstoneLamp->GetComponent<TransformComponent>().SetTranslation(temp_positions[i]);
+		redstoneLamp->GetComponent<TransformComponent>().SetScaling(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
+		redstoneLamp->GetComponent<TransformComponent>().SetRotationAxis(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
+		redstoneLamp->GetComponent<TransformComponent>().SetAngle(0.0f);
 	
+		redstoneLamp->AddComponent<ShaderResourceViewComponent>();
+		redstoneLamp->GetComponent<ShaderResourceViewComponent>().ZeroMem();
+		redstoneLamp->GetComponent<ShaderResourceViewComponent>().m_shaderResource = m_shaderResource_RedstoneLamp;
+		
 		DirectX::XMMATRIX Model =
 				DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
 				DirectX::XMMatrixRotationY(0.0f) *		// Rotate
 				DirectX::XMMatrixTranslation(temp_positions[i].x, temp_positions[i].y, temp_positions[i].z);	// Translate
 
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetModelMatrix(Model);
-		m_vRenderItems.back()->shaderResource = ShaderResource::RedstoneLamp;
-		m_vRenderItems.back()->m_bDoesRotate = false;
-		m_vRenderItems.back()->m_bIsLight = false;
-		m_vRenderItems.back()->pixelShader = PixelShader::Default;
+		redstoneLamp->GetComponent<TransformComponent>().SetModelMatrix(Model);
+		
+		redstoneLamp->m_bDoesRotate = false;
+		redstoneLamp->pixelShader = PixelShader::Default;
+
+		m_vRenderItems.push_back(redstoneLamp);
 	}
 	// Platform
 	{
-		m_vRenderItems.push_back(std::make_shared<RenderItem>());
-		m_vRenderItems.back()->AddComponent<TransformComponent>();
+		auto platform = std::make_shared<RenderItem>();
 
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetTranslation({ 0.0f, -2.0f, 0.0f });
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetScaling({ 20.0f, 1.0f, 20.0f });
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f});
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetAngle(0.0f);
+		platform->AddComponent<TransformComponent>();
+		platform->GetComponent<TransformComponent>().SetTranslation({ 0.0f, -2.0f, 0.0f });
+		platform->GetComponent<TransformComponent>().SetScaling({ 20.0f, 1.0f, 20.0f });
+		platform->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f });
+		platform->GetComponent<TransformComponent>().SetAngle(0.0f);
+
+		platform->AddComponent<ShaderResourceViewComponent>();
+		platform->GetComponent<ShaderResourceViewComponent>().ZeroMem();
+		platform->GetComponent<ShaderResourceViewComponent>().m_shaderResource = m_shaderResource_StoneBrick;
 
 		DirectX::XMMATRIX Model =
 			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
 			DirectX::XMMatrixTranslation(0.0f, -2.0f, 0.0f);	// Translate
 
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetModelMatrix(Model);
-		m_vRenderItems.back()->shaderResource = ShaderResource::StoneBrick;
-		m_vRenderItems.back()->m_bDoesRotate = false;
-		m_vRenderItems.back()->m_bIsLight = false;
-		m_vRenderItems.back()->pixelShader = PixelShader::Default;
-	}
-	// Lights
-	for (int i = 0; i < PointLightCount; i++)
-	{
-		m_vRenderItems.push_back(std::make_shared<RenderItem>());
-		m_vRenderItems.back()->AddComponent<TransformComponent>();
+		platform->GetComponent<TransformComponent>().SetModelMatrix(Model);
+		platform->m_bDoesRotate = false;
+		platform->pixelShader = PixelShader::Default;
 
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetTranslation(m_PSConstBuffer->pointLights[i].Position);
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetScaling({ 1.0f, 1.0f, 1.0f });
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f });
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetAngle(0.0f);
-
-		DirectX::XMMATRIX Model =
-			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
-			DirectX::XMMatrixTranslation(m_PSConstBuffer->pointLights[i].Position.x,
-									     m_PSConstBuffer->pointLights[i].Position.y,
-									     m_PSConstBuffer->pointLights[i].Position.z);	// Translate
-
-		m_vRenderItems.back()->GetComponent<TransformComponent>().SetModelMatrix(Model);
-		m_vRenderItems.back()->shaderResource = ShaderResource::StoneBrick;
-		m_vRenderItems.back()->m_bDoesRotate = false;
-		m_vRenderItems.back()->m_bIsLight = true;
-		m_vRenderItems.back()->pixelShader = PixelShader::NoIllumination;
+		m_vRenderItems.push_back(platform);
 	}
 
 	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 0.0f, 5.0f };
@@ -415,7 +401,7 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	// Important because many of these items use the same shader resource!
 	// Save every second you can on rendering time!
 
-	ShaderResource activeResource = ShaderResource::None;
+	ShaderResource activeShaderResource = ShaderResource::None;
 	PixelShader activePixelShader = PixelShader::Undefined;
 
 	deviceContext->PSSetShader(m_d3dPixelShaderNoIllumination.Get(), 0, 0);
@@ -448,32 +434,31 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	for (auto ri : m_vRenderItems)
 	{
 		assert(ri->HasComponent<TransformComponent>());
+		assert(ri->HasComponent<ShaderResourceViewComponent>());
 
-		if (ri->shaderResource != activeResource)
-			deviceContext->PSSetShaderResources(0, 1, m_shaderResources[ri->shaderResource].GetAddressOf());
-		{
+		if (ri->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType != activeShaderResource)
+			deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
+		
+		m_4x4Model =
+			DirectX::XMMatrixScaling(ri->GetComponent<TransformComponent>().GetScaling().x,
+				ri->GetComponent<TransformComponent>().GetScaling().y,
+				ri->GetComponent<TransformComponent>().GetScaling().z) *
 
-			m_4x4Model =
-				DirectX::XMMatrixScaling(ri->GetComponent<TransformComponent>().GetScaling().x,
-					ri->GetComponent<TransformComponent>().GetScaling().y,
-					ri->GetComponent<TransformComponent>().GetScaling().z) *
+			DirectX::XMMatrixRotationAxis(DirectX::XMLoadFloat3(&ri->GetComponent<TransformComponent>().GetRotationAxis()),
+															   	 ri->m_bDoesRotate ? mCntr * DirectX::XM_PI / 180.0f : 0.0f) *
 
-				DirectX::XMMatrixRotationAxis(DirectX::XMLoadFloat3(&ri->GetComponent<TransformComponent>().GetRotationAxis()),
-																   	 ri->m_bDoesRotate ? mCntr * DirectX::XM_PI / 180.0f : 0.0f) *
+			DirectX::XMMatrixTranslation(ri->GetComponent<TransformComponent>().GetTranslation().x, 
+										 ri->GetComponent<TransformComponent>().GetTranslation().y, 
+										 ri->GetComponent<TransformComponent>().GetTranslation().z);	// Translate
 
-				DirectX::XMMatrixTranslation(ri->GetComponent<TransformComponent>().GetTranslation().x, 
-											 ri->GetComponent<TransformComponent>().GetTranslation().y, 
-											 ri->GetComponent<TransformComponent>().GetTranslation().z);	// Translate
+		// World transform matrix
+		m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);	
 
-			// World transform matrix
-			m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);	
-
-			// Local transform matrix
-			m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);	
-			
-			this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
-			deviceContext->DrawIndexed(cubeSubMesh->IndexCount, 0, 0);		// Draw Call using index buffer
-		}
+		// Local transform matrix
+		m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);	
+		
+		this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
+		deviceContext->DrawIndexed(cubeSubMesh->IndexCount, 0, 0);		// Draw Call using index buffer
 	}
 
 	// ImGui
@@ -563,13 +548,9 @@ void Graphics::Clean()
 	delete m_VSConstBuffer;
 	delete m_PSConstBuffer;
 
-	for (int i = 0; i < 3; i++)
-	{
-		m_shaderResources[i].Reset();
-	}
-
-	//m_shaderResources.Reset();
-	//m_d3dSamplerState.Reset();
+	m_shaderResource_Fence.Reset();
+	m_shaderResource_RedstoneLamp.Reset();
+	m_shaderResource_StoneBrick.Reset();
 	
 	cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetBuffer().Reset();
 	cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().GetBuffer().Reset();

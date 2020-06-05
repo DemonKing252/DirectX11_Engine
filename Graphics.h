@@ -69,9 +69,10 @@ private:
 	PSConstBuffer* m_PSConstBuffer;
 	
 	// texturing
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResources[3];
-	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> redstoneLamp_shaderResource;
-	//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stoneBrick_shaderResource;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResource_Fence;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResource_RedstoneLamp;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResource_StoneBrick;
+	
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_d3dSamplerState;
 
 	// blending
