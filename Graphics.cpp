@@ -203,6 +203,18 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 	};
 	
+	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 0.0f, 5.0f };
+	m_PSConstBuffer->pointLights[0].Strength = { 1.0f, 0.6f, 0.0f };
+	m_PSConstBuffer->pointLights[0].SpecularStrength = 4.0f;
+	m_PSConstBuffer->pointLights[0].FallOffStart = 1.0f;
+	m_PSConstBuffer->pointLights[0].FallOffEnd = 8.0f;
+
+	m_PSConstBuffer->pointLights[1].Position = { 0.0f, 0.0f, -5.0f };
+	m_PSConstBuffer->pointLights[1].Strength = { 0.0f, 1.0f, 0.0f };
+	m_PSConstBuffer->pointLights[1].SpecularStrength = 4.0f;
+	m_PSConstBuffer->pointLights[1].FallOffStart = 1.0f;
+	m_PSConstBuffer->pointLights[1].FallOffEnd = 8.0f;
+
 	cubeSubMesh = std::make_shared<SubMeshGeometry>();
 
 	cubeSubMesh->IndexCount = ARRAYSIZE(indices);
@@ -234,7 +246,6 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	for (int i = 0; i < ARRAYSIZE(temp_positions); i++)
 	{
 		auto redstoneLamp = std::make_shared<RenderItem>();
-
 		redstoneLamp->AddComponent<TransformComponent>(); 
 		redstoneLamp->GetComponent<TransformComponent>().SetTranslation(temp_positions[i]);
 		redstoneLamp->GetComponent<TransformComponent>().SetScaling(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
@@ -243,6 +254,7 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	
 		redstoneLamp->AddComponent<ShaderResourceViewComponent>();
 		redstoneLamp->GetComponent<ShaderResourceViewComponent>().ZeroMem();
+		redstoneLamp->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType = ShaderResource::RedstoneLamp;
 		redstoneLamp->GetComponent<ShaderResourceViewComponent>().m_shaderResource = m_shaderResource_RedstoneLamp;
 		
 		DirectX::XMMATRIX Model =
@@ -252,15 +264,18 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 		redstoneLamp->GetComponent<TransformComponent>().SetModelMatrix(Model);
 		
-		redstoneLamp->m_bDoesRotate = false;
-		redstoneLamp->pixelShader = PixelShader::Default;
+		redstoneLamp->AddComponent<PixelShaderController>();
+		redstoneLamp->GetComponent<PixelShaderController>().ZeroMem();
+		redstoneLamp->GetComponent<PixelShaderController>().m_shader = m_d3dPixelShaderDefault;
+		redstoneLamp->GetComponent<PixelShaderController>().m_shaderType = PixelShader::Default;
 
+		redstoneLamp->m_bDoesRotate = true;
+		redstoneLamp->m_iLightIndex = 0;
 		m_vRenderItems.push_back(redstoneLamp);
 	}
 	// Platform
 	{
 		auto platform = std::make_shared<RenderItem>();
-
 		platform->AddComponent<TransformComponent>();
 		platform->GetComponent<TransformComponent>().SetTranslation({ 0.0f, -2.0f, 0.0f });
 		platform->GetComponent<TransformComponent>().SetScaling({ 20.0f, 1.0f, 20.0f });
@@ -269,6 +284,7 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 		platform->AddComponent<ShaderResourceViewComponent>();
 		platform->GetComponent<ShaderResourceViewComponent>().ZeroMem();
+		platform->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType = ShaderResource::StoneBrick;
 		platform->GetComponent<ShaderResourceViewComponent>().m_shaderResource = m_shaderResource_StoneBrick;
 
 		DirectX::XMMATRIX Model =
@@ -276,23 +292,42 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 			DirectX::XMMatrixTranslation(0.0f, -2.0f, 0.0f);	// Translate
 
 		platform->GetComponent<TransformComponent>().SetModelMatrix(Model);
-		platform->m_bDoesRotate = false;
-		platform->pixelShader = PixelShader::Default;
 
+		platform->AddComponent<PixelShaderController>();
+		platform->GetComponent<PixelShaderController>().ZeroMem();
+		platform->GetComponent<PixelShaderController>().m_shader = m_d3dPixelShaderDefault;
+		platform->GetComponent<PixelShaderController>().m_shaderType = PixelShader::Default;
+
+		platform->m_bDoesRotate = false;
+		platform->m_iLightIndex = 0;
 		m_vRenderItems.push_back(platform);
 	}
+	for (int i = 0; i < PointLightCount; i++)
+	{
+		auto pointLight = std::make_shared<RenderItem>();
+		pointLight->AddComponent<TransformComponent>();
+		pointLight->GetComponent<TransformComponent>().SetTranslation(m_PSConstBuffer->pointLights[i].Position);
+		pointLight->GetComponent<TransformComponent>().SetScaling({ 1.0f, 1.0f, 1.0f });
+		pointLight->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f });
 
-	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 0.0f, 5.0f };
-	m_PSConstBuffer->pointLights[0].Strength = { 1.0f, 0.6f, 0.0f };
-	m_PSConstBuffer->pointLights[0].SpecularStrength = 4.0f;
-	m_PSConstBuffer->pointLights[0].FallOffStart = 1.0f;
-	m_PSConstBuffer->pointLights[0].FallOffEnd = 8.0f;
+		DirectX::XMMATRIX Model =
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+			DirectX::XMMatrixRotationY(0.0f) *		// Rotate
+			DirectX::XMMatrixTranslation(m_PSConstBuffer->pointLights[i].Position.x, 
+										 m_PSConstBuffer->pointLights[i].Position.y,
+										 m_PSConstBuffer->pointLights[i].Position.z);	// Translate
 
-	m_PSConstBuffer->pointLights[1].Position = { 0.0f, 0.0f, -5.0f };
-	m_PSConstBuffer->pointLights[1].Strength = { 0.0f, 1.0f, 0.0f };
-	m_PSConstBuffer->pointLights[1].SpecularStrength = 4.0f;
-	m_PSConstBuffer->pointLights[1].FallOffStart = 1.0f;
-	m_PSConstBuffer->pointLights[1].FallOffEnd = 8.0f;
+		pointLight->GetComponent<TransformComponent>().SetModelMatrix(Model);
+
+		pointLight->AddComponent<PixelShaderController>();
+		pointLight->GetComponent<PixelShaderController>().ZeroMem();
+		pointLight->GetComponent<PixelShaderController>().m_shader = m_d3dPixelShaderNoIllumination;
+		pointLight->GetComponent<PixelShaderController>().m_shaderType = PixelShader::NoIllumination;
+		
+		pointLight->m_bDoesRotate = false;
+		pointLight->m_iLightIndex = i;
+		m_vRenderItems.push_back(pointLight);
+	}
 
 	m_4x4Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
 		800.0f / 600.0f, // Screen aspect
@@ -371,23 +406,23 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	// Step17: Draw our shape
 	/* Important Notes */
 	/******************************************************************
-		
+
 		1. Make sure ALL of your buffers you want to use are active on the pipline, either here or earlier.
-		
+
 		2. Important that you draw in clockwise rotation! Otherwise the primitives will be drawn from the opposite side
-		which is not ideal. WE CAN FIX THIS THOUGH! If you want your primitives to draw in counter-clockwise rotation OR you want them regardless of the 
+		which is not ideal. WE CAN FIX THIS THOUGH! If you want your primitives to draw in counter-clockwise rotation OR you want them regardless of the
 		order, we can change the rasterizer state settings.
 
-		3. If you're using a constant buffer, make sure its total size 
+		3. If you're using a constant buffer, make sure its total size
 		is a multiple of *16* bytes in memory. Group your variables from smallest to largest.
-		
+
 		Example:
 		[ ...............Constant Buffer..................]
 		[-------------------------------------------------]
 		 | float4 |  | float4 |  | float4x4 | = 24 floats
 		 (16 bytes)	 (16 bytes)  ( 64 bytes ) = 96 bytes / 16 = 6.0 <- Good!
 		[-------------------------------------------------]
-							  
+
 		[ ...............Constant Buffer..................]
 		[-------------------------------------------------]
 		 | float2 |  | float3 |  | float3x3 | = 14 floats
@@ -399,45 +434,41 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	// Save on performance! 
 	// Important because many of these items use the same shader resource!
 	// Save every second you can on rendering time!
-
 	ShaderResource activeShaderResource = ShaderResource::None;
 	PixelShader activePixelShader = PixelShader::Undefined;
 
-	deviceContext->PSSetShader(m_d3dPixelShaderNoIllumination.Get(), 0, 0);
-	for (int i = 0; i < PointLightCount; i++)
-	{
-		m_4x4Model =
-			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
-			DirectX::XMMatrixTranslation(m_PSConstBuffer->pointLights[i].Position.x, 
-										 m_PSConstBuffer->pointLights[i].Position.y,
-										 m_PSConstBuffer->pointLights[i].Position.z);	// Translate
-	
-		// World transform matrix
-		m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);
-	
-		// Local transform matrix
-		m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);
-	
-		m_PSConstBuffer->Color = 
-		{
-			m_PSConstBuffer->pointLights[i].Strength.x,
-			m_PSConstBuffer->pointLights[i].Strength.y,
-			m_PSConstBuffer->pointLights[i].Strength.z,
-			1.0f
-		};
-		this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
-		deviceContext->DrawIndexed(cubeSubMesh->IndexCount, 0, 0);		// Draw Call using index buffer
-	}
-	
-	deviceContext->PSSetShader(m_d3dPixelShaderDefault.Get(), 0, 0);
 	for (auto ri : m_vRenderItems)
 	{
 		assert(ri->HasComponent<TransformComponent>());
-		assert(ri->HasComponent<ShaderResourceViewComponent>());
+		assert
+		(
+			ri->HasComponent<ShaderResourceViewComponent>() ||
+			ri->HasComponent<PixelShaderController>()
+		);
+		if (ri->HasComponent<ShaderResourceViewComponent>())
+		{
+			if (ri->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType != activeShaderResource)
+				deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
+			
+			activeShaderResource = ri->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType;
+		}
+		if (ri->HasComponent<PixelShaderController>())
+		{
+			if (ri->GetComponent<PixelShaderController>().m_shaderType != activePixelShader)
+				deviceContext->PSSetShader(ri->GetComponent<PixelShaderController>().m_shader.Get(), 0, 0);
+			
+			assert(ri->m_iLightIndex < PointLightCount);
 
-		if (ri->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType != activeShaderResource)
-			deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
-		
+			m_PSConstBuffer->Color = 
+			{
+				m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.x,
+				m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.y,
+				m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.z,
+				1.0f
+			};
+
+			activePixelShader = ri->GetComponent<PixelShaderController>().m_shaderType;
+		}
 		m_4x4Model =
 			DirectX::XMMatrixScaling(ri->GetComponent<TransformComponent>().GetScaling().x,
 				ri->GetComponent<TransformComponent>().GetScaling().y,

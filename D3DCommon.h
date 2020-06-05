@@ -6,7 +6,10 @@
 #include <wrl.h>
 #define PointLightCount 2
 
+enum Shader { VS, PS };
 enum ShaderResource { Fence, RedstoneLamp, StoneBrick, None };
+enum PixelShader { Default, NoIllumination, Undefined };
+
 class PointLight
 {
 public:
@@ -34,4 +37,16 @@ public:
 
 	void ZeroMem();
 
+};
+
+class PixelShaderController : public Component
+{
+public:
+	PixelShader m_shaderType;
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_shader;
+
+	PixelShaderController();
+	~PixelShaderController();
+
+	void ZeroMem();
 };
