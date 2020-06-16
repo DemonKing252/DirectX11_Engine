@@ -17,6 +17,7 @@
 #include "SubMeshGeometry.h"
 #include "RenderItem.h"
 #include "Transform.h"
+#include "GeometryGenerator.h"
 
 // DirectX Libraries 
 #pragma comment(lib, "d3d11.lib")
@@ -30,7 +31,7 @@ class VSConstBuffer;
 typedef class Graphics
 {
 public:
-
+	ImFont* font;
 	// Delete the copy constructor. Only one instance of graphics should be created!
 	Graphics(Graphics* copy) = delete;
 	Graphics();
@@ -56,7 +57,6 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShaderNoIllumination;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShaderDefault;
 
-	std::shared_ptr<SubMeshGeometry> cubeSubMesh;
 	std::vector<std::shared_ptr<RenderItem>> m_vRenderItems;
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dVSConstantBuffer;

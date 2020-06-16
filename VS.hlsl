@@ -16,7 +16,7 @@ struct VSLayout
 
 VSLayout VSMain(float3 position : POSITION, float2 texCoord : TEXCOORD, float3 normal : NORMAL)
 {
-	VSLayout layout;
+    VSLayout layout;
 	
 	layout.position = mul(float4(position, 1.0f), World);
 	layout.texCoord = texCoord;

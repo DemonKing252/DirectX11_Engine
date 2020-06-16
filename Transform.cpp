@@ -49,6 +49,14 @@ void Transform::SetModelMatrix(DirectX::XMMATRIX matrix)
 	this->Model = matrix;
 }
 
+void Transform::Zero()
+{
+	this->Model = DirectX::XMMatrixIdentity();
+	this->Scale = this->RotationAxis = this->Translate = DirectX::XMFLOAT3(0.0f, 0.0f, 0.0f);
+	this->Angle = 0.0f;
+
+}
+
 DirectX::XMMATRIX Transform::GetModelMatrix() const
 {
 	return DirectX::XMMATRIX();

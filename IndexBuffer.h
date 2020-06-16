@@ -6,13 +6,13 @@
 #include "EntityComponentSystem.h"
 
 template <class T>
-class IndexBufferComponent : public Component
+class IndexBufferComponent 
 {
 public:
 	IndexBufferComponent(IndexBufferComponent<T>* other);
 	IndexBufferComponent();
 
-	void Initialize(ID3D11Device* device, T* data, UINT numVerticies);
+	void Initialize(ID3D11Device* device, T* data, UINT numIndicies);
 	void ZeroMem();
 
 	UINT GetStride() const;

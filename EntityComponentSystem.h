@@ -57,7 +57,6 @@ public:
 		for (auto& comp : components)
 		{
 			comp->update();
-			
 		}
 	}
 	void draw() 
@@ -65,7 +64,6 @@ public:
 		for (auto& comp : components)
 		{
 			comp->update();
-
 		}
 	}
 

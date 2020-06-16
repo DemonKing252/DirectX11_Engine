@@ -24,6 +24,7 @@ public:
 	void SetScaling(DirectX::XMFLOAT3 scale);
 	void SetAngle(FLOAT angle);
 	void SetModelMatrix(DirectX::XMMATRIX matrix);
+	void Zero();
 
 	DirectX::XMFLOAT3 GetTranslation()const;
 	DirectX::XMFLOAT3 GetRotationAxis()const;

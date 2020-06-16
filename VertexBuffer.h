@@ -5,7 +5,7 @@
 #include "D3DUtil.h"
 #include "EntityComponentSystem.h"
 template <class T>
-class VertexBufferComponent : public Component
+class VertexBufferComponent
 {
 public:
 	VertexBufferComponent(VertexBufferComponent<T>* other);

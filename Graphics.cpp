@@ -44,7 +44,7 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		if (errorQueue != S_OK)
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
-			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Vertex Shader Could Not Compile!", 0);
+			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Vertex Shader Could Not Compile!", MB_ICONSTOP);
 			errorQueue->Release();
 
 			Clean();
@@ -61,7 +61,7 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		if (errorQueue != S_OK)
 		{
 			/* Something went wrong, create a win32 message box and print the error log */
-			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Pixel Shader Could Not Compile!", 0);
+			MessageBox(0, (CHAR*)errorQueue->GetBufferPointer(), "Pixel Shader Could Not Compile!", MB_ICONSTOP);
 			errorQueue->Release();
 			
 			Clean();
@@ -94,15 +94,15 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	// size of our vertex buffer which is 160 bytes (0.16 MB)
 	D3D11_INPUT_ELEMENT_DESC inputLayout[] =
 	{
-		// layout 1 -> 3D vector representing vertex positions
+		// Layout 1 -> 3D vector representing vertex positions
 		// 12 bytes in V-RAM --> [12 bytes in vertex]
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 		
-		// layout 2 -> 2D vector representing vertex texture coordinates
+		// Layout 2 -> 2D vector representing vertex texture coordinates
 		// 8 bytes in V-RAM --> [20 bytes in vertex]
 		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 
-		// layout 3 -> 3D vector representing vertex texture normals
+		// Layout 3 -> 3D vector representing vertex texture normals
 		// 12 bytes in V-RAM --> [32 bytes in vertex]
 		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 	};
@@ -141,68 +141,6 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 {
 	// Step15: Create a vertex buffer blob, and fill it with our data.
 	// Making sure we use the same vertex setup as our input layout!
-
-	Vertex vertices[] = 
-	{
-		//								[  vertex position  ]					[texture coord]				   [	  normal	  ]
-		/*0*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f)),
-		/*1*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, -0.5f), DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f)),
-		/*2*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f)),
-		/*3*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, +0.5f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT3(0.0f, -1.0f, 0.0f)),
-				
-		/*4*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)),
-		/*5*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, -0.5f), DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)),
-		/*6*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)),
-		/*7*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, +0.5f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f)),
-			
-		/*8*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f)),
-		/*9*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f)),
-		/*10*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f)),
-		/*11*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT3(-1.0f, 0.0f, 0.0f)),
-				
-		/*12*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f)),
-		/*13*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f)),
-		/*14*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f)),
-		/*15*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT3(1.0f, 0.0f, 0.0f)),
-				
-		/*16*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, +0.5f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f)),
-		/*17*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f)),
-		/*18*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, +0.5f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f)),
-		/*19*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, +0.5f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 0.0f, 1.0f)),
-				
-		/*20*/	Vertex(DirectX::XMFLOAT3(-0.5f, -0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f)),
-		/*21*/	Vertex(DirectX::XMFLOAT3(+0.5f, -0.5f, -0.5f), DirectX::XMFLOAT2(1.0f, 0.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f)),
-		/*22*/	Vertex(DirectX::XMFLOAT3(+0.5f, +0.5f, -0.5f), DirectX::XMFLOAT2(1.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f)),
-		/*23*/	Vertex(DirectX::XMFLOAT3(-0.5f, +0.5f, -0.5f), DirectX::XMFLOAT2(0.0f, 1.0f), DirectX::XMFLOAT3(0.0f, 0.0f, -1.0f)),
-	};
-	UINT indices[36]
-	{
-		// bottom
-		0, 1, 2,
-		2, 3, 0,
-
-		// top
-		6, 5, 4,
-		4, 7, 6,
-
-		// left
-		8, 9, 10,
-		10, 11, 8,
-
-		// right
-		14, 13, 12,
-		12, 15, 14,
-
-		// back 
-		16, 17, 18,
-		18, 19, 16,
-
-		// front
-		22, 21, 20,
-		20, 23, 22
-
-	};
-	
 	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 0.0f, 5.0f };
 	m_PSConstBuffer->pointLights[0].Strength = { 1.0f, 0.6f, 0.0f };
 	m_PSConstBuffer->pointLights[0].SpecularStrength = 4.0f;
@@ -215,20 +153,10 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	m_PSConstBuffer->pointLights[1].FallOffStart = 1.0f;
 	m_PSConstBuffer->pointLights[1].FallOffEnd = 8.0f;
 
-	cubeSubMesh = std::make_shared<SubMeshGeometry>();
+	GeometryGenerator geoGen;
 
-	cubeSubMesh->IndexCount = ARRAYSIZE(indices);
-	cubeSubMesh->VertexCount = ARRAYSIZE(vertices);
-
-	// Add a vertex buffer component to our cube
-	cubeSubMesh->AddComponent<VertexBufferComponent<Vertex>>();
-	cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().ZeroMem();
-	cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().Initialize(device, vertices, ARRAYSIZE(vertices));
-
-	// Add a index buffer component to our cube
-	cubeSubMesh->AddComponent<IndexBufferComponent<UINT>>();
-	cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().ZeroMem();
-	cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().Initialize(device, indices, ARRAYSIZE(indices));
+	SubMeshGeometry cubeSubMesh = geoGen.CreateBox(device, 1.0f, 1.0f, 1.0f);
+	SubMeshGeometry gridSubMesh = geoGen.CreateGrid(device, 1.0f, 1.0f);
 		
 	DirectX::XMFLOAT3 temp_positions[10] =
 	{
@@ -247,14 +175,13 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	{
 		auto redstoneLamp = std::make_shared<RenderItem>();
 		redstoneLamp->AddComponent<TransformComponent>(); 
+		redstoneLamp->GetComponent<TransformComponent>().Zero();
 		redstoneLamp->GetComponent<TransformComponent>().SetTranslation(temp_positions[i]);
 		redstoneLamp->GetComponent<TransformComponent>().SetScaling(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
 		redstoneLamp->GetComponent<TransformComponent>().SetRotationAxis(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
-		redstoneLamp->GetComponent<TransformComponent>().SetAngle(0.0f);
-	
+		
 		redstoneLamp->AddComponent<ShaderResourceViewComponent>();
 		redstoneLamp->GetComponent<ShaderResourceViewComponent>().ZeroMem();
-		redstoneLamp->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType = ShaderResource::RedstoneLamp;
 		redstoneLamp->GetComponent<ShaderResourceViewComponent>().m_shaderResource = m_shaderResource_RedstoneLamp;
 		
 		DirectX::XMMATRIX Model =
@@ -270,25 +197,28 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		redstoneLamp->GetComponent<PixelShaderController>().m_shaderType = PixelShader::Default;
 
 		redstoneLamp->m_bDoesRotate = true;
-		redstoneLamp->m_iLightIndex = 0;
+		
+		redstoneLamp->AddComponent<SubMeshGeometry>();
+		redstoneLamp->GetComponent<SubMeshGeometry>() = cubeSubMesh;
+		redstoneLamp->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
 		m_vRenderItems.push_back(redstoneLamp);
 	}
 	// Platform
 	{
 		auto platform = std::make_shared<RenderItem>();
 		platform->AddComponent<TransformComponent>();
+		platform->GetComponent<TransformComponent>().Zero();
 		platform->GetComponent<TransformComponent>().SetTranslation({ 0.0f, -2.0f, 0.0f });
 		platform->GetComponent<TransformComponent>().SetScaling({ 20.0f, 1.0f, 20.0f });
 		platform->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f });
-		platform->GetComponent<TransformComponent>().SetAngle(0.0f);
-
+		
 		platform->AddComponent<ShaderResourceViewComponent>();
 		platform->GetComponent<ShaderResourceViewComponent>().ZeroMem();
-		platform->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType = ShaderResource::StoneBrick;
 		platform->GetComponent<ShaderResourceViewComponent>().m_shaderResource = m_shaderResource_StoneBrick;
 
 		DirectX::XMMATRIX Model =
-			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+			DirectX::XMMatrixScaling(20.0f, 1.0f, 20.0f) *	// Scale
 			DirectX::XMMatrixTranslation(0.0f, -2.0f, 0.0f);	// Translate
 
 		platform->GetComponent<TransformComponent>().SetModelMatrix(Model);
@@ -299,13 +229,18 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		platform->GetComponent<PixelShaderController>().m_shaderType = PixelShader::Default;
 
 		platform->m_bDoesRotate = false;
-		platform->m_iLightIndex = 0;
+		
+		platform->AddComponent<SubMeshGeometry>();
+		platform->GetComponent<SubMeshGeometry>() = gridSubMesh;
+		platform->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
 		m_vRenderItems.push_back(platform);
 	}
 	for (int i = 0; i < PointLightCount; i++)
 	{
 		auto pointLight = std::make_shared<RenderItem>();
 		pointLight->AddComponent<TransformComponent>();
+		pointLight->GetComponent<TransformComponent>().Zero();
 		pointLight->GetComponent<TransformComponent>().SetTranslation(m_PSConstBuffer->pointLights[i].Position);
 		pointLight->GetComponent<TransformComponent>().SetScaling({ 1.0f, 1.0f, 1.0f });
 		pointLight->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f });
@@ -326,6 +261,11 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		
 		pointLight->m_bDoesRotate = false;
 		pointLight->m_iLightIndex = i;
+
+		pointLight->AddComponent<SubMeshGeometry>();
+		pointLight->GetComponent<SubMeshGeometry>() = cubeSubMesh;
+		pointLight->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
 		m_vRenderItems.push_back(pointLight);
 	}
 
@@ -354,6 +294,13 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 		
 	deviceContext->OMSetBlendState(m_d3dBlendState.Get(), blendFactor, 0xffffffff);
+
+	// Clean temporary mesh data
+	cubeSubMesh.vertexBuffer.GetBuffer().Reset();
+	cubeSubMesh.indexBuffer.GetBuffer().Reset();
+
+	gridSubMesh.vertexBuffer.GetBuffer().Reset();
+	gridSubMesh.indexBuffer.GetBuffer().Reset();
 }
 
 void Graphics::InitImGui(ID3D11Device * device, ID3D11DeviceContext* deviceContext, std::shared_ptr<Window> window)
@@ -366,10 +313,18 @@ void Graphics::InitImGui(ID3D11Device * device, ID3D11DeviceContext* deviceConte
 	assert(ImGui_ImplWin32_Init(window->GetWindow()));
 	assert(ImGui_ImplDX11_Init(device, deviceContext));
 	ImGui::StyleColorsDark();
+
+	// Agency -> 20
+	// Arial -> 14
+
+	font = io.Fonts->AddFontFromFileTTF("Fonts/arial.ttf", 16.0f);
+
+	IM_ASSERT(font != NULL);
 }
 
 void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
+
 	// why is this so low? I've been too lazy to add a feature to control the framerate
 
 	mCntr += 1.0f; // With vsync enabled (locked at 60fps), each cube will rotate 60 degrees per second
@@ -377,32 +332,24 @@ void Graphics::Update(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	// view matrix (left handed coordinate system)
 	m_4x4View = DirectX::XMMatrixLookAtLH(D3DUtil::Get().m_EyePos,
 										DirectX::XMVectorSet(0.0f, 0.0f, 0.0f, 1.0f),
-										DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+										DirectX::XMVectorSet(0.0f, 1.0f, 0.0f, 1.0f));
 
 	DirectX::XMStoreFloat4(&m_PSConstBuffer->EyeWorldSpace, D3DUtil::Get().m_EyePos);
 
-
-	m_VSConstBuffer->View = DirectX::XMMatrixTranspose(m_4x4View);
 }
 
 void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 {
-	assert(cubeSubMesh->HasComponent<VertexBufferComponent<Vertex>>());
+	//assert(cubeSubMesh.HasComponent<VertexBufferComponent<Vertex>>());
 
-	UINT offset = cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetOffSet();
-	UINT stride = cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetStride();
-
+	
 	// Step16: Attach our vertex buffer and set our desired primitive topology type
 	// Read ---> [https://docs.microsoft.com/en-us/windows/win32/api/d3dcommon/ne-d3dcommon-d3d_primitive_topology]
 
 	// bind vertex/index buffers, and set our primitive type
-	deviceContext->IASetVertexBuffers(0, 1, cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetBuffer().GetAddressOf(), &stride, &offset);
-	deviceContext->IASetIndexBuffer(cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().GetBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
-	deviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+	
 	// set our texture sampler state and texture itself to be active on the pipeline
-	deviceContext->PSSetSamplers(0, 1, m_d3dSamplerState.GetAddressOf());
-
+	
 	// Step17: Draw our shape
 	/* Important Notes */
 	/******************************************************************
@@ -434,24 +381,36 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	// Save on performance! 
 	// Important because many of these items use the same shader resource!
 	// Save every second you can on rendering time!
-	ShaderResource activeShaderResource = ShaderResource::None;
 	PixelShader activePixelShader = PixelShader::Undefined;
 
+	// Default Sampler State
+	deviceContext->PSSetSamplers(0, 1, m_d3dSamplerState.GetAddressOf());
 	for (auto ri : m_vRenderItems)
 	{
+		assert(ri->HasComponent<SubMeshGeometry>());
 		assert(ri->HasComponent<TransformComponent>());
 		assert
 		(
 			ri->HasComponent<ShaderResourceViewComponent>() ||
 			ri->HasComponent<PixelShaderController>()
 		);
+		
+		UINT offset = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetOffSet();
+		UINT stride = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetStride();
+
+		// Bind the current vertex buffer to our pipeline
+		deviceContext->IASetVertexBuffers(0, 1, ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetBuffer().GetAddressOf(), &stride, &offset);
+		
+		// Bind the current index buffer to our pipeline
+		deviceContext->IASetIndexBuffer(ri->GetComponent<SubMeshGeometry>().indexBuffer.GetBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
+		
+		// Bind the current primitive toplogy type to our pipleline
+		deviceContext->IASetPrimitiveTopology(ri->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology);
+
+		// Our point light models use a different pixel shader, thats why we need to do this:
 		if (ri->HasComponent<ShaderResourceViewComponent>())
-		{
-			if (ri->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType != activeShaderResource)
-				deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
-			
-			activeShaderResource = ri->GetComponent<ShaderResourceViewComponent>().shaderResourceViewType;
-		}
+			deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
+		
 		if (ri->HasComponent<PixelShaderController>())
 		{
 			if (ri->GetComponent<PixelShaderController>().m_shaderType != activePixelShader)
@@ -488,7 +447,10 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 		m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);	
 		
 		this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
-		deviceContext->DrawIndexed(cubeSubMesh->IndexCount, 0, 0);		// Draw Call using index buffer
+		
+		// Future project: Add a 3D sprite component to manage draw calls
+
+		deviceContext->DrawIndexed(ri->GetComponent<SubMeshGeometry>().IndexCount, 0, 0);		// Draw Call using index buffer
 	}
 
 	// ImGui
@@ -496,11 +458,11 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	ImGui_ImplWin32_NewFrame();
 
 	ImGui::NewFrame();
+	ImGui::PushFont(font);
 
 	ImGui::Begin("Enviorment Settings");
 	ImGui::SetWindowPos(ImVec2(0, 0));
-	ImGui::SetWindowSize(ImVec2(365, 272));
-
+	ImGui::SetWindowSize(ImVec2(369, 308));
 	// Determine if we need to update our constant buffers
 	
 	ImGui::ColorEdit3("Background color", (float*)&D3D11App::Get().m_f4ClearColor); // Edit 3 floats representing a color
@@ -538,9 +500,11 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 	ImGui::Text("By: Liam Blake (C) 2020 All Rights Reserved.");
 
 	ImGui::End();
+	ImGui::PopFont();
 
 	ImGui::Render();
 	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
 
 	if (m_bSettings_have_changed) {
 		this->UpdateConstants(device, deviceContext);
@@ -581,9 +545,6 @@ void Graphics::Clean()
 	m_shaderResource_Fence.Reset();
 	m_shaderResource_RedstoneLamp.Reset();
 	m_shaderResource_StoneBrick.Reset();
-	
-	cubeSubMesh->GetComponent<VertexBufferComponent<Vertex>>().GetBuffer().Reset();
-	cubeSubMesh->GetComponent<IndexBufferComponent<UINT>>().GetBuffer().Reset();
 	
 	m_d3dInputLayout.Reset();
 	m_d3dVertexShader.Reset();

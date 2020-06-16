@@ -8,10 +8,29 @@ class Window;
 
 typedef class D3D11Application
 {
+private:
+	static D3D11Application s_Instance;
+	mutable Graphics gfx;
+	
+	// D3D Graphics Infrastructure Swap Chain
+	mutable Microsoft::WRL::ComPtr<IDXGISwapChain> m_dxgiSwapChain;
+	
+	// Main device adapters 
+	mutable Microsoft::WRL::ComPtr<ID3D11Device> m_d3dDevice;
+	mutable Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_d3dDeviceContext;
+	
+	// Depth and Stencil
+	mutable Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_d3dDepthStencilView;
+
+	// Render Target View
+	mutable Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_d3dBackBuffer;
+
+	// Rasterizer State
+	mutable Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_d3dRasterizerState;
 public:
 	D3D11Application(D3D11Application* copy) = delete;
 
-	// Initalizing D3D
+	// Initializeing D3D Methods
 	void InitDeviceAndSwapChain(std::shared_ptr<Window> window)const;
 	void InitDepthAndStencilView(std::shared_ptr<Window> window)const;
 	void InitRenderTarget(std::shared_ptr<Window> window)const;
@@ -34,18 +53,4 @@ public:
 	}
 
 	mutable FLOAT m_f4ClearColor[4];
-
-private:
-	static D3D11Application s_Instance;
-	mutable Graphics gfx;
-	// Main device adapters 
-	mutable Microsoft::WRL::ComPtr<IDXGISwapChain> m_d3dSwapChain;
-	mutable Microsoft::WRL::ComPtr<ID3D11Device> m_d3dDevice;
-	mutable Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_d3dDeviceContext;
-	mutable Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_d3dBackBuffer;
-
-	
-	// Depth and Stencil
-	mutable Microsoft::WRL::ComPtr<ID3D11DepthStencilView> m_d3dDepthStencilView;
-	
 } D3D11Application, D3D11App, D3D11Engine;

@@ -13,6 +13,6 @@ public:
 	bool m_bDoesRotate;
 
 	// If applicable!
-	UINT m_iLightIndex;
+	UINT m_iLightIndex = 0;
 };
 

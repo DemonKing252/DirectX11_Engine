@@ -113,7 +113,6 @@ DirectX::XMFLOAT2 Window::GetFrameBufferSize() const
 std::shared_ptr<Camera> Window::GetCamera()
 {
 	return m_pCamera;
-	// TODO: insert return statement here
 }
 
 void Window::MessageLoop(MSG msg)

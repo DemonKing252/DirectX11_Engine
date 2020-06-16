@@ -24,7 +24,6 @@ cbuffer PSConstantBuffer : register(b0)
     PointLight light[PointLightCount];
 }
 
-
 struct PSLayout
 {
 	float4 position : SV_POSITION;
@@ -32,12 +31,8 @@ struct PSLayout
 	float3 normal : NORMAL;
 	float3 fragPos : FRAG;
 };
-Texture2D g_texture : TEXTURE : register(t0);
-SamplerState g_samplerState : SAMPLE : register(s0);
 
 float4 PSMain(PSLayout layout) : SV_TARGET
 {
-	float4 ambientLight = float4(0.2f, 0.2f, 0.2f, 1.0f);
-
 	return clamp(Color, 0.0f, 1.0f);
 }

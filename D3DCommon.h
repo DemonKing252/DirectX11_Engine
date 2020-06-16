@@ -7,7 +7,6 @@
 #define PointLightCount 2
 
 enum Shader { VS, PS };
-enum ShaderResource { Fence, RedstoneLamp, StoneBrick, None };
 enum PixelShader { Default, NoIllumination, Undefined };
 
 class PointLight
@@ -29,7 +28,6 @@ public:
 class ShaderResourceViewComponent : public Component
 {
 public:
-	ShaderResource shaderResourceViewType;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResource;
 	
 	ShaderResourceViewComponent();
