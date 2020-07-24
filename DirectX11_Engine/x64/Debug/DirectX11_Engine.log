@@ -1,0 +1,8 @@
+﻿  D3D11Application.cpp
+d:\program files (x86)\directx\d3dpractice\directx11_engine\directx11_engine\d3d11application.cpp(63): warning C4244: '=': conversion from 'float' to 'UINT', possible loss of data
+d:\program files (x86)\directx\d3dpractice\directx11_engine\directx11_engine\d3d11application.cpp(64): warning C4244: '=': conversion from 'float' to 'UINT', possible loss of data
+  D3DMain.cpp
+  Graphics.cpp
+  Transform.cpp
+  Generating Code...
+  DirectX11_Engine.vcxproj -> D:\Program Files (x86)\DirectX\D3DPractice\DirectX11_Engine\x64\Debug\DirectX11_Engine.exe
