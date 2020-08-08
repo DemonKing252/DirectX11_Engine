@@ -117,7 +117,7 @@ void Graphics::InitPipeline(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/redstoneLamp.jpg", nullptr, m_shaderResources[(int)ShaderResources::RedstoneLamp].GetAddressOf()));
 
 	// Brick texture
-	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/StoneBrick.jpg", nullptr, m_shaderResources[(int)ShaderResources::Brick].GetAddressOf()));
+	ThrowIfFailed(DirectX::CreateWICTextureFromFile(device, L"Textures/ice.png", nullptr, m_shaderResources[(int)ShaderResources::Brick].GetAddressOf()));
 
 
 	// Read on D3D11 Sampler States:
@@ -141,13 +141,13 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 {
 	// Step15: Create a vertex buffer blob, and fill it with our data.
 	// Making sure we use the same vertex setup as our input layout!
-	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 0.0f, 5.0f };
+	m_PSConstBuffer->pointLights[0].Position = { 0.0f, 1.0f, 5.0f };
 	m_PSConstBuffer->pointLights[0].Strength = { 1.0f, 0.6f, 0.0f };
 	m_PSConstBuffer->pointLights[0].SpecularStrength = 4.0f;
 	m_PSConstBuffer->pointLights[0].FallOffStart = 1.0f;
 	m_PSConstBuffer->pointLights[0].FallOffEnd = 8.0f;
 
-	m_PSConstBuffer->pointLights[1].Position = { 0.0f, 0.0f, -5.0f };
+	m_PSConstBuffer->pointLights[1].Position = { 0.0f, 1.0f, -5.0f };
 	m_PSConstBuffer->pointLights[1].Strength = { 0.0f, 1.0f, 0.0f };
 	m_PSConstBuffer->pointLights[1].SpecularStrength = 4.0f;
 	m_PSConstBuffer->pointLights[1].FallOffStart = 1.0f;
@@ -160,17 +160,130 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		
 	DirectX::XMFLOAT3 temp_positions[10] =
 	{
-		{ +2.0f, 0.0f, 0.0f },
-		{ -2.0f, 0.0f, 0.0f },
-		{ +4.0f, 0.0f, 0.0f },
-		{ -4.0f, 0.0f, 0.0f },
-		{ +6.0f, 0.0f, 0.0f },
-		{ -6.0f, 0.0f, 0.0f },
-		{ +8.0f, 0.0f, 0.0f },
-		{ -8.0f, 0.0f, 0.0f },
-		{ +10.0f, 0.0f, 0.0f },
-		{ -10.0f, 0.0f, 0.0f },
+		{ +2.0f, 1.0f, 0.0f },
+		{ -2.0f, 1.0f, 0.0f },
+		{ +4.0f, 1.0f, 0.0f },
+		{ -4.0f, 1.0f, 0.0f },
+		{ +6.0f, 1.0f, 0.0f },
+		{ -6.0f, 1.0f, 0.0f },
+		{ +8.0f, 1.0f, 0.0f },
+		{ -8.0f, 1.0f, 0.0f },
+		{ +10.0f, 1.0f, 0.0f },
+		{ -10.0f, 1.0f, 0.0f },
 	};
+
+	D3D11_DEPTH_STENCIL_DESC defaultDSD;
+	ZeroMemory(&defaultDSD, sizeof(D3D11_DEPTH_STENCIL_DESC));
+
+	defaultDSD.DepthEnable = true;
+	defaultDSD.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	defaultDSD.DepthFunc = D3D11_COMPARISON_LESS;
+	//By using the stencil buffer, we can block  the reflected skull from being rendered unless it is being drawn in the mirror.
+	//what happens when you set reflectionsDSS.StencilEnable = false;
+	defaultDSD.StencilEnable = false;
+	defaultDSD.StencilReadMask = 0xff;
+	defaultDSD.StencilWriteMask = 0xff;
+
+	defaultDSD.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	defaultDSD.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	defaultDSD.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	//we set the stencil test to only succeed if the value in the stencil buffer equals 1 (stencil ref)
+	defaultDSD.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+
+	// We are not rendering backfacing polygons, so these settings do not matter.
+	defaultDSD.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	defaultDSD.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	defaultDSD.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	defaultDSD.BackFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+
+	ThrowIfFailed(device->CreateDepthStencilState(&defaultDSD, &m_dssDefault));
+
+	D3D11_DEPTH_STENCIL_DESC mirrorDSS;
+
+	mirrorDSS.DepthEnable = true;
+	mirrorDSS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; //which portion of the depth/stencil buffer that depth data can be written to.
+	mirrorDSS.DepthFunc = D3D11_COMPARISON_LESS; //the function the depth test should use
+	mirrorDSS.StencilEnable = true;
+	mirrorDSS.StencilReadMask = 0xff; //This is the portion of the depth/stencil buffer that the stencil test can read from
+	mirrorDSS.StencilWriteMask = 0xff; //This is the portion of the depth/stencil buffer that the stencil test can write to
+
+	// This is a D3D12_DEPTH_STENCILOP_DESC structure which describes what the depth or stencil test is supposed to do with pixels whose surface normals are facing camera (like the frontside of a triangle)
+	mirrorDSS.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP; //when a pixel fragment fails the stencil test.
+	mirrorDSS.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP; // when the stencil test passes but the depth test fails
+	mirrorDSS.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE; // when stencil and depth tests both pass
+	mirrorDSS.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS; //the function the stencil test should use
+
+	// We are not rendering backfacing polygons, so these settings do not matter.
+	mirrorDSS.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	mirrorDSS.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	mirrorDSS.BackFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
+	mirrorDSS.BackFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+
+	D3D11_DEPTH_STENCIL_DESC reflectionsDSS;
+	//By using the depth/stencil buffer, we can block the reflected from being rendered on the wall
+	//what happens when you set reflectionsDSS.DepthEnable = false; and reflectionsDSS.StencilEnable = false;
+	//the mirror would not occlude the reflection
+	reflectionsDSS.DepthEnable = true;
+	reflectionsDSS.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+	reflectionsDSS.DepthFunc = D3D11_COMPARISON_LESS;
+	//By using the stencil buffer, we can block  the reflected skull from being rendered unless it is being drawn in the mirror.
+	//what happens when you set reflectionsDSS.StencilEnable = false;
+	reflectionsDSS.StencilEnable = true;
+	reflectionsDSS.StencilReadMask = 0xff;
+	reflectionsDSS.StencilWriteMask = 0xff;
+
+	reflectionsDSS.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	reflectionsDSS.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	reflectionsDSS.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	//we set the stencil test to only succeed if the value in the stencil buffer equals 1 (stencil ref)
+	reflectionsDSS.FrontFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+
+	// We are not rendering backfacing polygons, so these settings do not matter.
+	reflectionsDSS.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+	reflectionsDSS.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+	reflectionsDSS.BackFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+	reflectionsDSS.BackFace.StencilFunc = D3D11_COMPARISON_EQUAL;
+
+	ThrowIfFailed(device->CreateDepthStencilState(&defaultDSD, &m_dssDefault));
+	ThrowIfFailed(device->CreateDepthStencilState(&mirrorDSS, &m_dssMirror));
+	ThrowIfFailed(device->CreateDepthStencilState(&reflectionsDSS, &m_dssReflected));
+	
+	for (int i = 0; i < ARRAYSIZE(temp_positions); i++)
+	{
+		auto redstoneLamp = std::make_shared<RenderItem>();
+		redstoneLamp->AddComponent<TransformComponent>();
+		redstoneLamp->GetComponent<TransformComponent>().Zero();
+		redstoneLamp->GetComponent<TransformComponent>().SetTranslation({ temp_positions[i].x, temp_positions[i].y, temp_positions[i].z });
+		redstoneLamp->GetComponent<TransformComponent>().SetScaling(DirectX::XMFLOAT3(1.0f, 1.0f, 1.0f));
+		redstoneLamp->GetComponent<TransformComponent>().SetRotationAxis(DirectX::XMFLOAT3(0.0f, 1.0f, 0.0f));
+
+		redstoneLamp->AddComponent<ShaderResourceViewComponent>();
+		redstoneLamp->GetComponent<ShaderResourceViewComponent>().ZeroMem();
+		redstoneLamp->GetComponent<ShaderResourceViewComponent>().m_shaderResource = m_shaderResources[(int)ShaderResources::RedstoneLamp];
+
+		DirectX::XMMATRIX Model =
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+			DirectX::XMMatrixRotationY(0.0f) *		// Rotate
+			DirectX::XMMatrixTranslation(temp_positions[i].x, temp_positions[i].y, temp_positions[i].z);	// Translate
+
+		redstoneLamp->GetComponent<TransformComponent>().SetModelMatrix(Model);
+
+		redstoneLamp->AddComponent<PixelShaderController>();
+		redstoneLamp->GetComponent<PixelShaderController>().ZeroMem();
+		redstoneLamp->GetComponent<PixelShaderController>().m_shader = m_d3dPixelShaderDefault;
+		redstoneLamp->GetComponent<PixelShaderController>().m_shaderType = PixelShader::Default;
+		redstoneLamp->GetComponent<PixelShaderController>().dss = m_dssDefault;
+		redstoneLamp->GetComponent<PixelShaderController>().stencilEffect = StencilEffect::Def;
+		redstoneLamp->GetComponent<PixelShaderController>().stencilRef = 0;
+
+		redstoneLamp->m_bDoesRotate = true;
+
+		redstoneLamp->AddComponent<SubMeshGeometry>();
+		redstoneLamp->GetComponent<SubMeshGeometry>() = cubeSubMesh;
+		redstoneLamp->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+		m_vRenderItems[StencilEffect::Def].push_back(redstoneLamp);
+	}
 	for (int i = 0; i < ARRAYSIZE(temp_positions); i++)
 	{
 		auto redstoneLamp = std::make_shared<RenderItem>();
@@ -185,16 +298,20 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		redstoneLamp->GetComponent<ShaderResourceViewComponent>().m_shaderResource = m_shaderResources[(int)ShaderResources::RedstoneLamp];
 		
 		DirectX::XMMATRIX Model =
-				DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
-				DirectX::XMMatrixRotationY(0.0f) *		// Rotate
 				DirectX::XMMatrixTranslation(temp_positions[i].x, temp_positions[i].y, temp_positions[i].z);	// Translate
 
-		redstoneLamp->GetComponent<TransformComponent>().SetModelMatrix(Model);
+		XMVECTOR planeReflect = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		XMMATRIX Reflected = XMMatrixReflect(planeReflect);
+
+		redstoneLamp->GetComponent<TransformComponent>().SetModelMatrix(Model * Reflected);
 		
 		redstoneLamp->AddComponent<PixelShaderController>();
 		redstoneLamp->GetComponent<PixelShaderController>().ZeroMem();
 		redstoneLamp->GetComponent<PixelShaderController>().m_shader = m_d3dPixelShaderDefault;
 		redstoneLamp->GetComponent<PixelShaderController>().m_shaderType = PixelShader::Default;
+		redstoneLamp->GetComponent<PixelShaderController>().dss = m_dssReflected;
+		redstoneLamp->GetComponent<PixelShaderController>().stencilEffect = StencilEffect::Ref;
+		redstoneLamp->GetComponent<PixelShaderController>().stencilRef = 1;
 
 		redstoneLamp->m_bDoesRotate = true;
 		
@@ -202,8 +319,9 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		redstoneLamp->GetComponent<SubMeshGeometry>() = cubeSubMesh;
 		redstoneLamp->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-		m_vRenderItems.push_back(redstoneLamp);
+		m_vRenderItems[StencilEffect::Ref].push_back(redstoneLamp);
 	}
+	
 	// Platform
 	{
 		auto platform = std::make_shared<RenderItem>();
@@ -219,7 +337,7 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 		DirectX::XMMATRIX Model =
 			DirectX::XMMatrixScaling(20.0f, 1.0f, 20.0f) *	// Scale
-			DirectX::XMMatrixTranslation(0.0f, -2.0f, 0.0f);	// Translate
+			DirectX::XMMatrixTranslation(0.0f, 0.0f, 0.0f);	// Translate
 
 		platform->GetComponent<TransformComponent>().SetModelMatrix(Model);
 
@@ -227,6 +345,9 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		platform->GetComponent<PixelShaderController>().ZeroMem();
 		platform->GetComponent<PixelShaderController>().m_shader = m_d3dPixelShaderDefault;
 		platform->GetComponent<PixelShaderController>().m_shaderType = PixelShader::Default;
+		platform->GetComponent<PixelShaderController>().dss = m_dssMirror;
+		platform->GetComponent<PixelShaderController>().stencilEffect = StencilEffect::Mirr;
+		platform->GetComponent<PixelShaderController>().stencilRef = 1;
 
 		platform->m_bDoesRotate = false;
 		
@@ -234,7 +355,7 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		platform->GetComponent<SubMeshGeometry>() = gridSubMesh;
 		platform->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-		m_vRenderItems.push_back(platform);
+		m_vRenderItems[StencilEffect::Mirr].push_back(platform);
 	}
 	for (int i = 0; i < PointLightCount; i++)
 	{
@@ -258,6 +379,9 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		pointLight->GetComponent<PixelShaderController>().ZeroMem();
 		pointLight->GetComponent<PixelShaderController>().m_shader = m_d3dPixelShaderNoIllumination;
 		pointLight->GetComponent<PixelShaderController>().m_shaderType = PixelShader::NoIllumination;
+		pointLight->GetComponent<PixelShaderController>().dss = m_dssDefault;
+		pointLight->GetComponent<PixelShaderController>().stencilEffect = StencilEffect::Def;
+		pointLight->GetComponent<PixelShaderController>().stencilRef = 0;
 		
 		pointLight->m_bDoesRotate = false;
 		pointLight->m_iLightIndex = i;
@@ -266,7 +390,45 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 		pointLight->GetComponent<SubMeshGeometry>() = cubeSubMesh;
 		pointLight->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 
-		m_vRenderItems.push_back(pointLight);
+		m_vRenderItems[StencilEffect::Def].push_back(pointLight);
+	}
+	for (int i = 0; i < PointLightCount; i++)
+	{
+		auto pointLight = std::make_shared<RenderItem>();
+		pointLight->AddComponent<TransformComponent>();
+		pointLight->GetComponent<TransformComponent>().Zero();
+		pointLight->GetComponent<TransformComponent>().SetTranslation(m_PSConstBuffer->pointLights[i].Position);
+		pointLight->GetComponent<TransformComponent>().SetScaling({ 1.0f, 1.0f, 1.0f });
+		pointLight->GetComponent<TransformComponent>().SetRotationAxis({ 0.0f, 1.0f, 0.0f });
+
+		DirectX::XMMATRIX Model =
+			DirectX::XMMatrixScaling(1.0f, 1.0f, 1.0f) *	// Scale
+			DirectX::XMMatrixRotationY(0.0f) *		// Rotate
+			DirectX::XMMatrixTranslation(m_PSConstBuffer->pointLights[i].Position.x,
+				m_PSConstBuffer->pointLights[i].Position.y,
+				m_PSConstBuffer->pointLights[i].Position.z);	// Translate
+
+		XMVECTOR planeReflect = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+		XMMATRIX Reflected = XMMatrixReflect(planeReflect);
+
+		pointLight->GetComponent<TransformComponent>().SetModelMatrix(Model * Reflected);
+
+		pointLight->AddComponent<PixelShaderController>();
+		pointLight->GetComponent<PixelShaderController>().ZeroMem();
+		pointLight->GetComponent<PixelShaderController>().m_shader = m_d3dPixelShaderNoIllumination;
+		pointLight->GetComponent<PixelShaderController>().m_shaderType = PixelShader::NoIllumination;
+		pointLight->GetComponent<PixelShaderController>().dss = m_dssReflected;
+		pointLight->GetComponent<PixelShaderController>().stencilEffect = StencilEffect::Ref;
+		pointLight->GetComponent<PixelShaderController>().stencilRef = 1;
+
+		pointLight->m_bDoesRotate = false;
+		pointLight->m_iLightIndex = i;
+
+		pointLight->AddComponent<SubMeshGeometry>();
+		pointLight->GetComponent<SubMeshGeometry>() = cubeSubMesh;
+		pointLight->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
+
+		m_vRenderItems[StencilEffect::Ref].push_back(pointLight);
 	}
 
 	m_4x4Projection = DirectX::XMMatrixPerspectiveFovLH(DirectX::XMConvertToRadians(45.0f), // Field of view in radians
@@ -291,9 +453,34 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 	blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
 
 	ThrowIfFailed(device->CreateBlendState(&blendStateDesc, m_d3dBlendState.GetAddressOf()));
-	float blendFactor[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
-		
-	deviceContext->OMSetBlendState(m_d3dBlendState.Get(), blendFactor, 0xffffffff);
+	blend_factor[0] = 0.0f;
+	blend_factor[1] = 0.0f;
+	blend_factor[2] = 0.0f;
+	blend_factor[3] = 0.0f;
+
+	deviceContext->OMSetBlendState(m_d3dBlendState.Get(), blend_factor, 0xffffffff);
+
+	// --
+	ZeroMemory(&blendStateDesc, sizeof(D3D11_BLEND_DESC));
+
+	blendStateDesc.RenderTarget[0].BlendEnable = false;
+	blendStateDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+	
+	blendStateDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	blendStateDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	
+	blendStateDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	blendStateDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	blendStateDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+
+	blend_factor[0] = 0.0f;
+	blend_factor[1] = 0.0f;
+	blend_factor[2] = 0.0f;
+	blend_factor[3] = 0.0f;
+	// Left off here:
+	ThrowIfFailed(device->CreateBlendState(&blendStateDesc, m_d3dNoBlendState.GetAddressOf()));
+	//deviceContext->OMSetBlendState(m_d3dNoBlendState.Get(), blend_factor, 0xffffffff);
 
 	// Clean temporary mesh data
 	cubeSubMesh.vertexBuffer.GetBuffer().Reset();
@@ -301,6 +488,20 @@ void Graphics::InitGraphics(ID3D11Device* device, ID3D11DeviceContext* deviceCon
 
 	gridSubMesh.vertexBuffer.GetBuffer().Reset();
 	gridSubMesh.indexBuffer.GetBuffer().Reset();
+
+
+	D3D11_RASTERIZER_DESC rasDesc = {};
+	rasDesc.CullMode = D3D11_CULL_BACK;
+	rasDesc.FillMode = D3D11_FILL_SOLID;
+
+	ThrowIfFailed(device->CreateRasterizerState(&rasDesc, m_rasterizerCullBack.GetAddressOf()));
+
+	rasDesc = {};
+	rasDesc.CullMode = D3D11_CULL_FRONT;
+	rasDesc.FillMode = D3D11_FILL_SOLID;
+
+	ThrowIfFailed(device->CreateRasterizerState(&rasDesc, m_rasterizerCullNone.GetAddressOf()));
+
 }
 
 void Graphics::InitImGui(ID3D11Device * device, ID3D11DeviceContext* deviceContext, std::shared_ptr<Window> window)
@@ -384,74 +585,207 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	// Default Sampler State
 	deviceContext->PSSetSamplers(0, 1, m_d3dSamplerState.GetAddressOf());
-	for (auto ri : m_vRenderItems)
+	deviceContext->OMSetBlendState(m_d3dNoBlendState.Get(), blend_factor, 0xffffffff);
+
+
+	deviceContext->RSSetState(m_rasterizerCullBack.Get());
+	for (auto ri : m_vRenderItems[StencilEffect::Def])
 	{
-		assert(ri->HasComponent<SubMeshGeometry>());
-		assert(ri->HasComponent<TransformComponent>());
-		assert
-		(
-			ri->HasComponent<ShaderResourceViewComponent>() ||
-			ri->HasComponent<PixelShaderController>()
-		);
-		
-		UINT offset = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetOffSet();
-		UINT stride = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetStride();
-
-		// Bind the current vertex buffer.
-		deviceContext->IASetVertexBuffers(0, 1, ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetBuffer().GetAddressOf(), &stride, &offset);
-		
-		// Bind the current index buffer.
-		deviceContext->IASetIndexBuffer(ri->GetComponent<SubMeshGeometry>().indexBuffer.GetBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
-		
-		// Bind the current primitive toplogy type.
-		deviceContext->IASetPrimitiveTopology(ri->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology);
-
-		// Bind the current shader resource view (texture).
-		if (ri->HasComponent<ShaderResourceViewComponent>())
-			deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
-		
-		// Our point light models use a different pixel shader, thats why we need to do this:
-		if (ri->HasComponent<PixelShaderController>())
+		//if (ri->GetComponent<PixelShaderController>().stencilEffect == StencilEffect::Def)
 		{
-			if (ri->GetComponent<PixelShaderController>().m_shaderType != activePixelShader)
-				deviceContext->PSSetShader(ri->GetComponent<PixelShaderController>().m_shader.Get(), 0, 0);
-			
-			assert(ri->m_iLightIndex < PointLightCount);
 
-			// Update the CBV color variable.
-			m_PSConstBuffer->Color = 
+			assert(ri->HasComponent<SubMeshGeometry>());
+			assert(ri->HasComponent<TransformComponent>());
+			assert
+			(
+				ri->HasComponent<ShaderResourceViewComponent>() ||
+				ri->HasComponent<PixelShaderController>()
+			);
+
+			UINT offset = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetOffSet();
+			UINT stride = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetStride();
+
+			// Bind the current vertex buffer.
+			deviceContext->IASetVertexBuffers(0, 1, ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetBuffer().GetAddressOf(), &stride, &offset);
+
+			// Bind the current index buffer.
+			deviceContext->IASetIndexBuffer(ri->GetComponent<SubMeshGeometry>().indexBuffer.GetBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
+
+			// Bind the current primitive toplogy type.
+			deviceContext->IASetPrimitiveTopology(ri->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology);
+
+			// Bind the current shader resource view (texture).
+			if (ri->HasComponent<ShaderResourceViewComponent>())
+				deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
+
+			// Our point light models use a different pixel shader, thats why we need to do this:
+			if (ri->HasComponent<PixelShaderController>())
 			{
-				m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.x,
-				m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.y,
-				m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.z,
-				1.0f
-			};
+				if (ri->GetComponent<PixelShaderController>().m_shaderType != activePixelShader)
+					deviceContext->PSSetShader(ri->GetComponent<PixelShaderController>().m_shader.Get(), 0, 0);
 
-			activePixelShader = ri->GetComponent<PixelShaderController>().m_shaderType;
+				assert(ri->m_iLightIndex < PointLightCount);
+
+				// Update the CBV color variable.
+				m_PSConstBuffer->Color =
+				{
+					m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.x,
+					m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.y,
+					m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.z,
+					1.0f
+				};
+
+				activePixelShader = ri->GetComponent<PixelShaderController>().m_shaderType;
+			}
+			m_4x4Model = ri->GetComponent<TransformComponent>().GetModelMatrix();
+
+			// World transform matrix
+			m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);
+
+			// Local transform matrix
+			m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);
+
+			this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
+
+			// Future project: Add a 3D sprite component to manage draw calls
+			deviceContext->OMSetDepthStencilState(ri->GetComponent<PixelShaderController>().dss, ri->GetComponent<PixelShaderController>().stencilRef);
+
+			deviceContext->DrawIndexed(ri->GetComponent<SubMeshGeometry>().IndexCount, 0, 0);		// Draw Call using index buffer
 		}
-		m_4x4Model =
-			DirectX::XMMatrixScaling(ri->GetComponent<TransformComponent>().GetScaling().x,
-				ri->GetComponent<TransformComponent>().GetScaling().y,
-				ri->GetComponent<TransformComponent>().GetScaling().z) *
+	}
 
-			DirectX::XMMatrixRotationAxis(DirectX::XMLoadFloat3(&ri->GetComponent<TransformComponent>().GetRotationAxis()),
-															   	 ri->m_bDoesRotate ? mCntr * DirectX::XM_PI / 180.0f : 0.0f) *
+	deviceContext->OMSetBlendState(m_d3dBlendState.Get(), blend_factor, 0xffffffff);
+	for (auto ri : m_vRenderItems[StencilEffect::Mirr])
+	{
+		//if (ri->GetComponent<PixelShaderController>().stencilEffect == StencilEffect::Mirr)
+		{
 
-			DirectX::XMMatrixTranslation(ri->GetComponent<TransformComponent>().GetTranslation().x, 
-										 ri->GetComponent<TransformComponent>().GetTranslation().y, 
-										 ri->GetComponent<TransformComponent>().GetTranslation().z);	// Translate
+			assert(ri->HasComponent<SubMeshGeometry>());
+			assert(ri->HasComponent<TransformComponent>());
+			assert
+			(
+				ri->HasComponent<ShaderResourceViewComponent>() ||
+				ri->HasComponent<PixelShaderController>()
+			);
 
-		// World transform matrix
-		m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);	
+			UINT offset = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetOffSet();
+			UINT stride = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetStride();
 
-		// Local transform matrix
-		m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);	
-		
-		this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
-		
-		// Future project: Add a 3D sprite component to manage draw calls
+			// Bind the current vertex buffer.
+			deviceContext->IASetVertexBuffers(0, 1, ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetBuffer().GetAddressOf(), &stride, &offset);
 
-		deviceContext->DrawIndexed(ri->GetComponent<SubMeshGeometry>().IndexCount, 0, 0);		// Draw Call using index buffer
+			// Bind the current index buffer.
+			deviceContext->IASetIndexBuffer(ri->GetComponent<SubMeshGeometry>().indexBuffer.GetBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
+
+			// Bind the current primitive toplogy type.
+			deviceContext->IASetPrimitiveTopology(ri->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology);
+
+			// Bind the current shader resource view (texture).
+			if (ri->HasComponent<ShaderResourceViewComponent>())
+				deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
+
+			// Our point light models use a different pixel shader, thats why we need to do this:
+			if (ri->HasComponent<PixelShaderController>())
+			{
+				if (ri->GetComponent<PixelShaderController>().m_shaderType != activePixelShader)
+					deviceContext->PSSetShader(ri->GetComponent<PixelShaderController>().m_shader.Get(), 0, 0);
+
+				assert(ri->m_iLightIndex < PointLightCount);
+
+				// Update the CBV color variable.
+				m_PSConstBuffer->Color =
+				{
+					1.0f,
+					1.0f,
+					1.0f,
+					0.8f
+				};
+
+				activePixelShader = ri->GetComponent<PixelShaderController>().m_shaderType;
+			}
+			m_4x4Model = ri->GetComponent<TransformComponent>().GetModelMatrix();
+
+			// World transform matrix
+			m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);
+
+			// Local transform matrix
+			m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);
+
+			this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
+
+			// Future project: Add a 3D sprite component to manage draw calls
+			deviceContext->OMSetDepthStencilState(ri->GetComponent<PixelShaderController>().dss, ri->GetComponent<PixelShaderController>().stencilRef);
+
+			deviceContext->DrawIndexed(ri->GetComponent<SubMeshGeometry>().IndexCount, 0, 0);		// Draw Call using index buffer
+		}
+	}
+	if (m_bStencilingEnabled) {
+		deviceContext->RSSetState(m_rasterizerCullNone.Get());
+		for (auto ri : m_vRenderItems[StencilEffect::Ref])
+		{
+			//if (ri->GetComponent<PixelShaderController>().stencilEffect == StencilEffect::Ref)
+			{
+				assert(ri->HasComponent<SubMeshGeometry>());
+				assert(ri->HasComponent<TransformComponent>());
+				assert
+				(
+					ri->HasComponent<ShaderResourceViewComponent>() ||
+					ri->HasComponent<PixelShaderController>()
+				);
+
+				UINT offset = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetOffSet();
+				UINT stride = ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetStride();
+
+				// Bind the current vertex buffer.
+				deviceContext->IASetVertexBuffers(0, 1, ri->GetComponent<SubMeshGeometry>().vertexBuffer.GetBuffer().GetAddressOf(), &stride, &offset);
+
+				// Bind the current index buffer.
+				deviceContext->IASetIndexBuffer(ri->GetComponent<SubMeshGeometry>().indexBuffer.GetBuffer().Get(), DXGI_FORMAT_R32_UINT, 0);
+
+				// Bind the current primitive toplogy type.
+				deviceContext->IASetPrimitiveTopology(ri->GetComponent<SubMeshGeometry>().m_d3dPrimitiveTopology);
+
+				// Bind the current shader resource view (texture).
+				if (ri->HasComponent<ShaderResourceViewComponent>())
+					deviceContext->PSSetShaderResources(0, 1, ri->GetComponent<ShaderResourceViewComponent>().m_shaderResource.GetAddressOf());
+
+				// Our point light models use a different pixel shader, thats why we need to do this:
+				if (ri->HasComponent<PixelShaderController>())
+				{
+					deviceContext->OMSetDepthStencilState(ri->GetComponent<PixelShaderController>().dss, ri->GetComponent<PixelShaderController>().stencilRef);
+
+					if (ri->GetComponent<PixelShaderController>().m_shaderType != activePixelShader)
+						deviceContext->PSSetShader(ri->GetComponent<PixelShaderController>().m_shader.Get(), 0, 0);
+
+					assert(ri->m_iLightIndex < PointLightCount);
+
+					// Update the CBV color variable.
+					m_PSConstBuffer->Color =
+					{
+						m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.x,
+						m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.y,
+						m_PSConstBuffer->pointLights[ri->m_iLightIndex].Strength.z,
+						0.5f
+					};
+
+					activePixelShader = ri->GetComponent<PixelShaderController>().m_shaderType;
+				}
+
+				m_4x4Model = ri->GetComponent<TransformComponent>().GetModelMatrix();
+
+				// World transform matrix
+				m_VSConstBuffer->World = DirectX::XMMatrixTranspose(m_4x4Model * m_4x4View * m_4x4Projection);
+
+				// Local transform matrix
+				m_VSConstBuffer->Model = DirectX::XMMatrixTranspose(m_4x4Model);
+
+				this->UpdateConstants(device, deviceContext);	// Update constant variables in the vertex/pixel shader
+
+				// Future project: Add a 3D sprite component to manage draw calls
+
+				deviceContext->DrawIndexed(ri->GetComponent<SubMeshGeometry>().IndexCount, 0, 0);		// Draw Call using index buffer
+			}
+		}
 	}
 
 	// ImGui
@@ -463,7 +797,7 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 	ImGui::Begin("Enviorment Settings");
 	ImGui::SetWindowPos(ImVec2(0, 0));
-	ImGui::SetWindowSize(ImVec2(350, 280));
+	ImGui::SetWindowSize(ImVec2(350, 310));
 	// Determine if we need to update our constant buffers
 	
 	ImGui::ColorEdit3("Background color", (float*)&D3D11App::Instance()->m_f4ClearColor); // Edit 3 floats representing a color
@@ -493,8 +827,9 @@ void Graphics::Draw(ID3D11Device* device, ID3D11DeviceContext* deviceContext)
 
 		ImGui::Separator();
 	}
+	ImGui::Checkbox("Stenciling Enabled", &m_bStencilingEnabled);
 	ImGui::Checkbox("VSync Enabled", &m_bVsyncEnabled);
-
+	
 	ImGui::NewLine();
 	ImGui::Text("DirectX v11.0 Window (%.0fx%.0f)", ImGui::GetWindowSize().x, ImGui::GetWindowSize().y);
 	ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);

@@ -95,7 +95,7 @@ float4 PSMain(PSLayout layout) : SV_TARGET
     //    // We can show light, there is no shadow here
     //}
     
-    return (g_sampleColor * float4(totalLight, 1.0f));
+    return (g_sampleColor * float4(totalLight, Color.a)) * Color;
 }
 /*
 #define MaxLights 2

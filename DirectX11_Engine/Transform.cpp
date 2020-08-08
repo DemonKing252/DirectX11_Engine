@@ -59,7 +59,7 @@ void Transform::Zero()
 
 DirectX::XMMATRIX Transform::GetModelMatrix() const
 {
-	return DirectX::XMMATRIX();
+	return this->Model;
 }
 
 DirectX::XMFLOAT3  Transform::GetTranslation()const

@@ -18,6 +18,7 @@
 #include "RenderItem.h"
 #include "Transform.h"
 #include "GeometryGenerator.h"
+using namespace DirectX;
 
 // DirectX Libraries 
 #pragma comment(lib, "d3d11.lib")
@@ -35,7 +36,7 @@ enum ShaderResources : int
 	Brick,
 	Count
 };
-
+// Line 443 left off
 typedef class Graphics
 {
 public:
@@ -65,7 +66,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShaderNoIllumination;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_d3dPixelShaderDefault;
 
-	std::vector<std::shared_ptr<RenderItem>> m_vRenderItems;
+	std::vector<std::shared_ptr<RenderItem>> m_vRenderItems[(int)StencilEffect::Cnt];
 
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dVSConstantBuffer;
 	Microsoft::WRL::ComPtr<ID3D11Buffer> m_d3dPSConstantBuffer;
@@ -75,17 +76,26 @@ private:
 
 	VSConstBuffer* m_VSConstBuffer;
 	PSConstBuffer* m_PSConstBuffer;
-	
+	float blend_factor[4];
+	bool m_bStencilingEnabled = true;
+
 	// texturing
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> m_shaderResources[(int)ShaderResources::Count];
 	
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> m_d3dSamplerState;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerCullNone;
+	Microsoft::WRL::ComPtr<ID3D11RasterizerState> m_rasterizerCullBack;
 
 	// blending
 	Microsoft::WRL::ComPtr<ID3D11BlendState> m_d3dBlendState;
+	Microsoft::WRL::ComPtr<ID3D11BlendState> m_d3dNoBlendState;
 	
 	DirectX::XMMATRIX m_4x4Model;
 	DirectX::XMMATRIX m_4x4View;
 	DirectX::XMMATRIX m_4x4Projection;
+
+	ID3D11DepthStencilState* m_dssDefault;
+	ID3D11DepthStencilState* m_dssMirror;
+	ID3D11DepthStencilState* m_dssReflected;
 
 } Graphics, GFX;

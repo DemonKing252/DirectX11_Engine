@@ -36,10 +36,15 @@ public:
 	void ZeroMem();
 
 };
-
+enum StencilEffect : int { Def, Ref, Mirr, Cnt };
 class PixelShaderController : public Component
 {
 public:
+	StencilEffect stencilEffect;
+
+	ID3D11DepthStencilState* dss;
+	UINT stencilRef = 0;
+
 	PixelShader m_shaderType;
 	Microsoft::WRL::ComPtr<ID3D11PixelShader> m_shader;
 
